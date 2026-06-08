@@ -105,18 +105,25 @@ public partial class WorldMapChart : ComponentBase
 
     private static (double X, double Y) GetPathCenter(string path)
     {
+        // Paths look like "M643 183 L644 183 ... Z": the first token of each command is glued to its
+        // command letter (e.g. "M643"/"L644"). Strip the leading letter, then average the x/y stream.
+        var nums = new List<double>();
+        foreach (var token in path.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var t = token;
+            if (t.Length > 0 && !char.IsDigit(t[0]) && t[0] != '-' && t[0] != '.')
+                t = t.Substring(1);
+            if (t.Length > 0 && double.TryParse(t, out var v))
+                nums.Add(v);
+        }
+
         double sumX = 0, sumY = 0;
         var count = 0;
-        var parts = path.Split(' ');
-        for (var i = 0; i < parts.Length - 1; i++)
+        for (var i = 0; i + 1 < nums.Count; i += 2)
         {
-            if (double.TryParse(parts[i], out var x) && double.TryParse(parts[i + 1], out var y))
-            {
-                sumX += x;
-                sumY += y;
-                count++;
-                i++;
-            }
+            sumX += nums[i];
+            sumY += nums[i + 1];
+            count++;
         }
         return count > 0 ? (sumX / count, sumY / count) : (500, 250);
     }

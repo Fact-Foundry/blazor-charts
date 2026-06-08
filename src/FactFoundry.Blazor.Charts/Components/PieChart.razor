@@ -40,18 +40,7 @@
         }
     }
 
-    @* Hover tooltip (only when labels are off) *@
-    @if (!ShowLabels && _hoveredIndex is not null)
-    {
-        var segment = EffectiveData[_hoveredIndex.Value];
-        var midAngleRad = GetMidAngle(_hoveredIndex.Value) * Math.PI / 180;
-        var tooltipX = CenterX + (Radius + 20) * Math.Cos(midAngleRad);
-        var tooltipY = CenterY + (Radius + 20) * Math.Sin(midAngleRad);
-        var anchor = Math.Cos(midAngleRad) >= 0 ? "start" : "end";
-        @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{tooltipY.ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})</text>")
-    }
-
-    @* Legend *@
+    @* Legend — drawn before the tooltip so the hover tooltip paints on top of it *@
     @if (ShowLegend)
     {
         var legendX = Width - LegendWidth + 10;
@@ -63,4 +52,16 @@
             @((MarkupString)$"<text x=\"{legendX + 14}\" y=\"{legendY}\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\">{GetLegendText(i)}</text>")
         }
     }
+
+    @* Hover tooltip (only when labels are off) *@
+    @if (!ShowLabels && _hoveredIndex is not null)
+    {
+        var segment = EffectiveData[_hoveredIndex.Value];
+        var midAngleRad = GetMidAngle(_hoveredIndex.Value) * Math.PI / 180;
+        var tooltipX = CenterX + (Radius + 20) * Math.Cos(midAngleRad);
+        var tooltipY = CenterY + (Radius + 20) * Math.Sin(midAngleRad);
+        var anchor = Math.Cos(midAngleRad) >= 0 ? "start" : "end";
+        @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{tooltipY.ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})</text>")
+    }
+
 </svg>

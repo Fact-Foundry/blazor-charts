@@ -29,22 +29,7 @@
         }
     </g>
 
-    @* Tooltip *@
-    @if (_hoveredCountry is not null)
-    {
-        var tip = GetTooltipPosition();
-        var tooltipText = GetTooltipText();
-        var textWidth = tooltipText.Length * 7 + 16;
-        var boxX = tip.X - textWidth / 2;
-        var boxY = tip.Y - 14;
-
-        <rect x="@boxX.ToString("F1")" y="@boxY.ToString("F1")"
-              width="@textWidth" height="22" rx="4"
-              fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
-        @((MarkupString)$"<text x=\"{tip.X.ToString("F1")}\" y=\"{(tip.Y + 2).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{tooltipText}</text>")
-    }
-
-    @* Color scale legend *@
+    @* Color scale legend — drawn before the tooltip so the hover tooltip paints on top of it *@
     @if (ShowLegend && Data.Count > 0)
     {
         var legendX = Width - 180;
@@ -65,4 +50,22 @@
         @((MarkupString)$"<text x=\"{legendX}\" y=\"{legendY + 22}\" font-size=\"9\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{MinValue:N0}</text>")
         @((MarkupString)$"<text x=\"{legendX + 120}\" y=\"{legendY + 22}\" text-anchor=\"end\" font-size=\"9\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{MaxValue:N0}</text>")
     }
+
+    @* Tooltip *@
+    @if (_hoveredCountry is not null)
+    {
+        var tip = GetTooltipPosition();
+        var tooltipText = GetTooltipText();
+        var textWidth = tooltipText.Length * 7 + 16;
+        var boxX = tip.X - textWidth / 2;
+        var boxY = tip.Y - 14;
+
+        <g style="pointer-events: none;">
+            <rect x="@boxX.ToString("F1")" y="@boxY.ToString("F1")"
+                  width="@textWidth" height="22" rx="4"
+                  fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
+            @((MarkupString)$"<text x=\"{tip.X.ToString("F1")}\" y=\"{(tip.Y + 2).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{tooltipText}</text>")
+        </g>
+    }
+
 </svg>

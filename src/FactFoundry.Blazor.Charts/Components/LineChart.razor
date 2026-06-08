@@ -87,6 +87,20 @@
         }
     }
 
+    @* Legend — drawn before tooltips so the hover tooltip paints on top of it *@
+    @if (ShowLegend && Series.Count > 0)
+    {
+        var layout = GetLegendLayout();
+        var legendBaseY = Height - LegendTotalHeight + 5;
+        @foreach (var item in layout)
+        {
+            var color = GetSeriesColor(item.SeriesIndex);
+            var iy = legendBaseY + item.Y;
+            <rect x="@item.X.ToString("F0")" y="@((iy - 8).ToString("F0"))" width="12" height="12" rx="2" fill="@color" />
+            @((MarkupString)$"<text x=\"{(item.X + 16).ToString("F0")}\" y=\"{iy.ToString("F0")}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{Series[item.SeriesIndex].Label}</text>")
+        }
+    }
+
     @* Crosshair hover zones *@
     @if (CrosshairTooltip && PointCount > 0)
     {
@@ -111,7 +125,7 @@
     {
         var tx = ScaleX(_hoveredPointIndex.Value);
         var ty = ScaleY(Series[_hoveredSeriesIndex.Value].Values[_hoveredPointIndex.Value]) - 12;
-        <g>
+        <g style="pointer-events: none;">
             <rect x="@((tx - 60).ToString("F1"))" y="@((ty - 14).ToString("F1"))"
                   width="120" height="20" rx="4" fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
             @((MarkupString)$"<text x=\"{tx.ToString("F1")}\" y=\"{(ty - 1).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{GetTooltipText()}</text>")
@@ -127,6 +141,7 @@
             : _hoveredColumnIndex.Value.ToString();
         var tipPos = GetCrosshairTooltipLayout();
 
+        <g style="pointer-events: none;">
         @* Vertical crosshair line *@
         <line x1="@cx.ToString("F1")" y1="@PaddingTop"
               x2="@cx.ToString("F1")" y2="@(PaddingTop + ChartAreaHeight)"
@@ -151,19 +166,7 @@
             <circle cx="@((tipPos.X + 14).ToString("F1"))" cy="@((rowY + 3).ToString("F1"))" r="4" fill="@color" />
             @((MarkupString)$"<text x=\"{(tipPos.X + 24).ToString("F1")}\" y=\"{(rowY + 7).ToString("F1")}\" font-size=\"10\" fill=\"{ResolvedTheme.TooltipTextColor}\">{Series[i].Label}: {val}</text>")
         }
+        </g>
     }
 
-    @* Legend *@
-    @if (ShowLegend && Series.Count > 0)
-    {
-        var layout = GetLegendLayout();
-        var legendBaseY = Height - LegendTotalHeight + 5;
-        @foreach (var item in layout)
-        {
-            var color = GetSeriesColor(item.SeriesIndex);
-            var iy = legendBaseY + item.Y;
-            <rect x="@item.X.ToString("F0")" y="@((iy - 8).ToString("F0"))" width="12" height="12" rx="2" fill="@color" />
-            @((MarkupString)$"<text x=\"{(item.X + 16).ToString("F0")}\" y=\"{iy.ToString("F0")}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{Series[item.SeriesIndex].Label}</text>")
-        }
-    }
 </svg>

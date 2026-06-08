@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] - 2026-06-08
+
+### Fixed
+
+- Hover tooltips now paint above the legend instead of the legend bleeding through them (LineChart, BarChart, DonutChart, PieChart, WorldMapChart)
+- Hover tooltips no longer flicker when positioned under the cursor — tooltip elements are now `pointer-events: none` so the mouse passes through to the hover target (all chart types)
+- LineChart/BarChart crosshair tooltip box now sizes to its widest line so long series labels are no longer clipped
+- DonutChart/PieChart hover tooltip is kept within the chart bounds instead of being clipped at the edges; it shifts to stay on-screen even when a label is wider than the plotting area
+- WorldMapChart tooltip now appears at the hovered country's centroid instead of always at the map center (the path-coordinate parser ignored the SVG command letters glued to each first coordinate)
+
+### Added
+
+- DonutChart hover tooltip gained a background box (matching the line/bar tooltips) for readability
+- **ShowLegendPercent** parameter on DonutChart — appends each segment's percentage to its legend entry
+
+## [1.0.0] - 2026-06-07
 
 ### Added
 

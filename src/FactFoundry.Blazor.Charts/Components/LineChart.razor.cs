@@ -247,9 +247,22 @@ public partial class LineChart : ComponentBase
     {
         if (_hoveredColumnIndex is null) return (0, 0, 0, 0);
 
-        var cx = ScaleX(_hoveredColumnIndex.Value);
+        var col = _hoveredColumnIndex.Value;
+        var cx = ScaleX(col);
         var rowHeight = 18.0;
-        var boxWidth = 170.0;
+
+        // Size the box to its widest line so long series labels aren't clipped.
+        // Header (font-size 11) is inset 10px; rows (font-size 10) are inset 24px past the swatch.
+        var xLabel = col < XAxisLabels.Count ? XAxisLabels[col] : col.ToString();
+        var boxWidth = 10 + xLabel.Length * 6.6 + 10;
+        for (var i = 0; i < Series.Count; i++)
+        {
+            var v = col < Series[i].Values.Count ? Series[i].Values[col].ToString("N0") : "—";
+            var lineWidth = 24 + ($"{Series[i].Label}: {v}").Length * 6.0 + 10;
+            if (lineWidth > boxWidth) boxWidth = lineWidth;
+        }
+        if (boxWidth < 120) boxWidth = 120;
+
         var boxHeight = 26 + Series.Count * rowHeight + 4;
         var boxX = cx + 12;
         if (boxX + boxWidth > Width - PaddingRight)
