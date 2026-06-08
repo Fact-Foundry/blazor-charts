@@ -17,6 +17,7 @@ public partial class PieChart : ComponentBase
     [Parameter] public bool ShowLabelPercent { get; set; } = true;
     [Parameter] public int Width { get; set; } = 300;
     [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public bool Responsive { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 

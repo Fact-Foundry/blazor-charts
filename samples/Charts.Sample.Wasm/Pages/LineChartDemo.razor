@@ -8,6 +8,7 @@
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="showArea" /> Show Area</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLegend" /> Show Legend</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="crosshairTooltip" /> Crosshair Tooltip</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="responsive" /> Responsive</label>
 </div>
 
 <h3>Multi-Series</h3>
@@ -19,6 +20,7 @@
            ShowArea="showArea"
            ShowLegend="showLegend"
            CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
            Width="700"
            Height="350" />
 
@@ -30,6 +32,7 @@
            SmoothLines="smoothLines"
            ShowLegend="false"
            CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
            Width="700"
            Height="250" />
 
@@ -39,6 +42,7 @@
     private bool showArea;
     private bool showLegend = true;
     private bool crosshairTooltip;
+    private bool responsive;
 
     private List<string> dateLabels =
     [

@@ -14,6 +14,7 @@ public partial class WorldMapChart : ComponentBase
     [Parameter] public bool ShowLegend { get; set; } = true;
     [Parameter] public int Width { get; set; } = 900;
     [Parameter] public int Height { get; set; } = 450;
+    [Parameter] public bool Responsive { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 

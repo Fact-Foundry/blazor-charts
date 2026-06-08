@@ -17,6 +17,7 @@ public partial class LineChart : ComponentBase
     [Parameter] public int Width { get; set; } = 600;
     [Parameter] public int Height { get; set; } = 300;
     [Parameter] public int StrokeWidth { get; set; } = 2;
+    [Parameter] public bool Responsive { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 

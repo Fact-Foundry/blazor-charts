@@ -1,6 +1,10 @@
 @namespace FactFoundry.Blazor.Charts.Components
 
-<svg width="@Width" height="@Height" xmlns="http://www.w3.org/2000/svg" role="img">
+<svg width="@(Responsive ? "100%" : $"{Width}")"
+     height="@(Responsive ? null : $"{Height}")"
+     viewBox="@(Responsive ? $"0 0 {Width} {Height}" : null)"
+     preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+     xmlns="http://www.w3.org/2000/svg" role="img">
     @if (!string.IsNullOrEmpty(Title))
     {
         <title>@Title</title>

@@ -9,6 +9,7 @@
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="horizontal" /> Horizontal</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="stacked" /> Stacked</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="crosshairTooltip" /> Crosshair Tooltip</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="responsive" /> Responsive</label>
 </div>
 
 <h3>Multi-Series (Grouped)</h3>
@@ -20,6 +21,7 @@
           Horizontal="horizontal"
           Stacked="stacked"
           CrosshairTooltip="crosshairTooltip"
+          Responsive="responsive"
           Width="700"
           Height="350" />
 
@@ -32,6 +34,7 @@
           Horizontal="horizontal"
           Stacked="stacked"
           CrosshairTooltip="crosshairTooltip"
+          Responsive="responsive"
           Width="700"
           Height="300" />
 
@@ -41,6 +44,7 @@
     private bool horizontal;
     private bool stacked;
     private bool crosshairTooltip;
+    private bool responsive;
 
     private List<string> quarterLabels = ["Q1", "Q2", "Q3", "Q4"];
 

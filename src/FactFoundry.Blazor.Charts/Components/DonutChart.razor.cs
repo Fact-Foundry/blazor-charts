@@ -19,6 +19,7 @@ public partial class DonutChart : ComponentBase
     [Parameter] public int InnerRadiusPercent { get; set; } = 60;
     [Parameter] public int Width { get; set; } = 300;
     [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public bool Responsive { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 

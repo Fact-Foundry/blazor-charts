@@ -170,6 +170,22 @@ Individual charts can override the cascading theme via the `Theme` parameter:
 <LineChart Theme="@custom" ... />
 ```
 
+## Responsive Sizing
+
+All charts support fluid sizing via the `Responsive` parameter. When enabled, charts scale to fill their container width while maintaining aspect ratio — no JavaScript required:
+
+```razor
+<LineChart Responsive="true" Width="700" Height="350" Series="@series" ... />
+```
+
+`Width` and `Height` define the aspect ratio (viewBox) when responsive. The chart scales up/down to fit its parent container. Wrap in a `<div>` to constrain:
+
+```razor
+<div style="max-width: 600px;">
+    <BarChart Responsive="true" Width="700" Height="350" ... />
+</div>
+```
+
 ## Design Principles
 
 - **Zero dependencies** — pure .NET and Blazor, nothing else
