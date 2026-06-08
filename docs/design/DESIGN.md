@@ -40,12 +40,17 @@ src/FactFoundry.Blazor.Charts/
 │   ├── ChartSeries.cs       — Data model for line charts (label, color, values)
 │   └── ChartSegment.cs      — Data model for pie/donut charts (label, color, value)
 ├── Components/
-│   ├── LineChart.razor(.cs)  — Time-series line chart with multi-series support
-│   ├── BarChart.razor(.cs)   — Grouped/stacked bar chart (vertical or horizontal)
-│   ├── DonutChart.razor(.cs) — Proportional donut chart with configurable hole
-│   └── PieChart.razor(.cs)   — Proportional pie chart (solid, no hole)
+│   ├── LineChart.razor(.cs)      — Time-series line chart with multi-series support
+│   ├── BarChart.razor(.cs)       — Grouped/stacked bar chart (vertical or horizontal)
+│   ├── WorldMapChart.razor(.cs)  — Choropleth world map heatmap
+│   ├── ChartThemeProvider.razor  — Cascading theme wrapper
+│   ├── DonutChart.razor(.cs)     — Proportional donut chart with configurable hole
+│   └── PieChart.razor(.cs)       — Proportional pie chart (solid, no hole)
+├── Geo/
+│   └── WorldGeometry.cs          — 174 country SVG paths + display names
 └── Themes/
-    └── ChartDefaults.cs      — Default color palette (12 colors)
+    ├── ChartDefaults.cs          — Default color palette (12 colors)
+    └── ChartTheme.cs             — Theme configuration (light/dark presets)
 ```
 
 ## 4. Component API
@@ -105,6 +110,18 @@ src/FactFoundry.Blazor.Charts/
 | ShowLabels | bool | false | Show leader line callout labels on each segment |
 | Width | int | 300 | SVG width |
 | Height | int | 300 | SVG height |
+
+### WorldMapChart
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Title | string? | null | Chart title (rendered in SVG) |
+| Data | List\<MapDataPoint\> | [] | Country code + value pairs |
+| ColorScale | string[] | ["#dbeafe", "#2563eb"] | Gradient stops (2 or more hex colors) |
+| NoDataColor | string | #e5e7eb | Fill for countries with no data |
+| ShowLegend | bool | true | Show gradient scale legend |
+| Width | int | 900 | SVG width in pixels |
+| Height | int | 450 | SVG height in pixels |
 
 ## 5. Theming
 
@@ -166,6 +183,36 @@ The chart radius shrinks automatically when labels are on to make room. Hover to
 
 Blazor's Razor compiler reserves the `<text>` tag as a directive. SVG `<text>` elements are rendered via `MarkupString` to bypass this limitation.
 
-## 8. Target Frameworks
+## 8. World Map Geography Data
+
+### Source
+
+Country boundaries in `WorldGeometry.cs` are derived from the [Natural Earth 110m Admin 0 Countries](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/) dataset (public domain). The 110m scale is intentionally low-resolution — simplified enough for fast SVG rendering while remaining recognizable.
+
+### Maintenance
+
+Country borders change. Natural Earth typically releases updates roughly once a year, though the 110m tier is stable enough that only major geopolitical events (new countries, sovereignty transfers) produce visible changes.
+
+**Check annually** (or on major version bumps) whether the upstream dataset has been updated:
+
+1. Download the latest GeoJSON:
+   ```
+   curl -sL "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson" -o /tmp/ne_110m_countries.geojson
+   ```
+2. Run the converter script (kept at project root as `tools/convert_geojson.py`):
+   ```
+   python3 tools/convert_geojson.py > src/FactFoundry.Blazor.Charts/Geo/WorldGeometry.cs
+   ```
+3. Diff the output against the current file to see what changed.
+
+### Projection
+
+All coordinates use equirectangular projection mapped to a 1000×500 internal viewBox:
+- `x = (longitude + 180) / 360 × 1000`
+- `y = (90 − latitude) / 180 × 500`
+
+The component scales from this internal coordinate space to the user-specified `Width`/`Height` via an SVG `<g transform="scale(...)">`.
+
+## 9. Target Frameworks
 
 Multi-targets .NET 8.0, 9.0, and 10.0 to maximize compatibility. Uses `Microsoft.AspNetCore.Components.Web` package reference (not FrameworkReference) to support both Server and WebAssembly hosting models.

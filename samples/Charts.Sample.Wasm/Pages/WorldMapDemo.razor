@@ -1,0 +1,103 @@
+@page "/world-map"
+
+<h2>World Map Chart</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showLegend" /> Show Legend</label>
+    <label style="margin-left: 1rem;">Color scheme:</label>
+    <select @bind="colorScheme" style="margin-left: 0.25rem;">
+        <option value="blue">Blue</option>
+        <option value="heat">Heat (Yellow → Red)</option>
+        <option value="green">Green</option>
+        <option value="purple">Purple</option>
+    </select>
+</div>
+
+<h3>Users by Country</h3>
+<WorldMapChart Title="Active Users"
+               Data="@userData"
+               ColorScale="@GetColorScale()"
+               ShowLegend="showLegend"
+               Width="900"
+               Height="450" />
+
+<h3 style="margin-top: 2rem;">GDP per Capita</h3>
+<WorldMapChart Title="GDP per Capita (USD)"
+               Data="@gdpData"
+               ColorScale="@(new[] { "#fef3c7", "#d97706", "#7c2d12" })"
+               ShowLegend="showLegend"
+               Width="900"
+               Height="450" />
+
+@code {
+    private bool showLegend = true;
+    private string colorScheme = "blue";
+
+    private string[] GetColorScale() => colorScheme switch
+    {
+        "heat" => ["#fef08a", "#f97316", "#dc2626"],
+        "green" => ["#dcfce7", "#16a34a"],
+        "purple" => ["#f3e8ff", "#7c3aed"],
+        _ => ["#dbeafe", "#2563eb"],
+    };
+
+    private List<MapDataPoint> userData =
+    [
+        new() { CountryCode = "US", Value = 45000 },
+        new() { CountryCode = "GB", Value = 12000 },
+        new() { CountryCode = "DE", Value = 9500 },
+        new() { CountryCode = "FR", Value = 8200 },
+        new() { CountryCode = "CA", Value = 7800 },
+        new() { CountryCode = "AU", Value = 6500 },
+        new() { CountryCode = "BR", Value = 5200 },
+        new() { CountryCode = "IN", Value = 4800 },
+        new() { CountryCode = "JP", Value = 4200 },
+        new() { CountryCode = "KR", Value = 3100 },
+        new() { CountryCode = "NL", Value = 2800 },
+        new() { CountryCode = "ES", Value = 2600 },
+        new() { CountryCode = "IT", Value = 2400 },
+        new() { CountryCode = "MX", Value = 2100 },
+        new() { CountryCode = "PL", Value = 1900 },
+        new() { CountryCode = "SE", Value = 1700 },
+        new() { CountryCode = "NO", Value = 1500 },
+        new() { CountryCode = "AR", Value = 1200 },
+        new() { CountryCode = "CN", Value = 3800 },
+        new() { CountryCode = "RU", Value = 1100 },
+        new() { CountryCode = "ZA", Value = 900 },
+        new() { CountryCode = "NG", Value = 600 },
+        new() { CountryCode = "EG", Value = 750 },
+        new() { CountryCode = "SA", Value = 1400 },
+        new() { CountryCode = "TR", Value = 1800 },
+    ];
+
+    private List<MapDataPoint> gdpData =
+    [
+        new() { CountryCode = "US", Value = 76000 },
+        new() { CountryCode = "CH", Value = 92000 },
+        new() { CountryCode = "NO", Value = 82000 },
+        new() { CountryCode = "IE", Value = 100000 },
+        new() { CountryCode = "DK", Value = 68000 },
+        new() { CountryCode = "AU", Value = 65000 },
+        new() { CountryCode = "NL", Value = 57000 },
+        new() { CountryCode = "SE", Value = 56000 },
+        new() { CountryCode = "DE", Value = 51000 },
+        new() { CountryCode = "CA", Value = 52000 },
+        new() { CountryCode = "GB", Value = 46000 },
+        new() { CountryCode = "FR", Value = 44000 },
+        new() { CountryCode = "JP", Value = 34000 },
+        new() { CountryCode = "KR", Value = 33000 },
+        new() { CountryCode = "IT", Value = 35000 },
+        new() { CountryCode = "ES", Value = 30000 },
+        new() { CountryCode = "SA", Value = 28000 },
+        new() { CountryCode = "PL", Value = 18000 },
+        new() { CountryCode = "CN", Value = 13000 },
+        new() { CountryCode = "MX", Value = 11000 },
+        new() { CountryCode = "BR", Value = 9000 },
+        new() { CountryCode = "RU", Value = 12000 },
+        new() { CountryCode = "TR", Value = 10000 },
+        new() { CountryCode = "ZA", Value = 6000 },
+        new() { CountryCode = "IN", Value = 2500 },
+        new() { CountryCode = "NG", Value = 2200 },
+        new() { CountryCode = "EG", Value = 4000 },
+    ];
+}

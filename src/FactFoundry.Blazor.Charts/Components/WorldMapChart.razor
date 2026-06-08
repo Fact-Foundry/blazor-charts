@@ -1,0 +1,64 @@
+@namespace FactFoundry.Blazor.Charts.Components
+
+<svg width="@Width" height="@Height" xmlns="http://www.w3.org/2000/svg" role="img">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <title>@Title</title>
+        @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"{ResolvedTheme.TextColor}\">{Title}</text>")
+    }
+
+    @* Country shapes *@
+    <g transform="scale(@ScaleX.ToString("F4"), @ScaleY.ToString("F4"))">
+        @foreach (var entry in WorldGeometry.CountryPaths)
+        {
+            var countryCode = entry.Key;
+            var path = entry.Value;
+            var fill = GetCountryFill(countryCode);
+            var isHovered = _hoveredCountry == countryCode;
+            <path d="@path" fill="@fill"
+                  stroke="@ResolvedTheme.GridColor" stroke-width="@(isHovered ? "1.5" : "0.5")"
+                  stroke-opacity="@(isHovered ? "0.8" : "0.3")"
+                  fill-opacity="@(isHovered ? "1" : "0.9")"
+                  @onmouseover="() => OnCountryMouseOver(countryCode)"
+                  @onmouseout="OnCountryMouseOut"
+                  style="cursor: pointer; transition: fill-opacity 0.15s, stroke-width 0.15s;" />
+        }
+    </g>
+
+    @* Tooltip *@
+    @if (_hoveredCountry is not null)
+    {
+        var tip = GetTooltipPosition();
+        var tooltipText = GetTooltipText();
+        var textWidth = tooltipText.Length * 7 + 16;
+        var boxX = tip.X - textWidth / 2;
+        var boxY = tip.Y - 14;
+
+        <rect x="@boxX.ToString("F1")" y="@boxY.ToString("F1")"
+              width="@textWidth" height="22" rx="4"
+              fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
+        @((MarkupString)$"<text x=\"{tip.X.ToString("F1")}\" y=\"{(tip.Y + 2).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{tooltipText}</text>")
+    }
+
+    @* Color scale legend *@
+    @if (ShowLegend && Data.Count > 0)
+    {
+        var legendX = Width - 180;
+        var legendY = Height - 30;
+        var gradId = "mapGrad";
+
+        <defs>
+            <linearGradient id="@gradId" x1="0%" y1="0%" x2="100%" y2="0%">
+                @for (var i = 0; i < ColorScale.Length; i++)
+                {
+                    var offset = ColorScale.Length > 1 ? (i * 100.0 / (ColorScale.Length - 1)) : 0;
+                    <stop offset="@($"{offset:F0}%")" stop-color="@ColorScale[i]" />
+                }
+            </linearGradient>
+        </defs>
+
+        <rect x="@legendX" y="@legendY" width="120" height="10" rx="2" fill="url(#mapGrad)" stroke="@ResolvedTheme.GridColor" stroke-opacity="0.3" stroke-width="0.5" />
+        @((MarkupString)$"<text x=\"{legendX}\" y=\"{legendY + 22}\" font-size=\"9\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{MinValue:N0}</text>")
+        @((MarkupString)$"<text x=\"{legendX + 120}\" y=\"{legendY + 22}\" text-anchor=\"end\" font-size=\"9\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{MaxValue:N0}</text>")
+    }
+</svg>

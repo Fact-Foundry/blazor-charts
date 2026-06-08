@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All donut features minus inner radius
   - Segment hover highlighting
   - Legend support
+- **WorldMapChart** component — choropleth world map heatmap
+  - 174 countries with Natural Earth 110m boundaries (equirectangular projection)
+  - Data-driven color fill via configurable multi-stop color scale
+  - Hover tooltips showing country name and value
+  - Gradient legend with min/max labels
+  - Supports 2-color and 3-color (or more) gradient scales
+  - No-data countries rendered in neutral gray
+  - Theme-aware (text, grid/stroke, tooltip colors)
 - **ChartTheme** system — cascading theme support for all chart components
   - Built-in `ChartTheme.Light` and `ChartTheme.Dark` presets
   - `ChartThemeProvider` component delivers theme to all child charts via CascadingValue
