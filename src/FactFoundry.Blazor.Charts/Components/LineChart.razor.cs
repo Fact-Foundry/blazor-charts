@@ -17,6 +17,10 @@ public partial class LineChart : ComponentBase
     [Parameter] public int Width { get; set; } = 600;
     [Parameter] public int Height { get; set; } = 300;
     [Parameter] public int StrokeWidth { get; set; } = 2;
+    [Parameter] public ChartTheme? Theme { get; set; }
+    [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
+
+    private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
     private const int PaddingLeft = 50;
     private const int PaddingRight = 20;
@@ -39,7 +43,7 @@ public partial class LineChart : ComponentBase
     private string GetSeriesColor(int index)
     {
         var series = Series[index];
-        return series.Color ?? ChartDefaults.GetColor(index);
+        return series.Color ?? ResolvedTheme.GetColor(index);
     }
 
     private double ScaleX(int pointIndex)

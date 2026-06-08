@@ -108,11 +108,48 @@ src/FactFoundry.Blazor.Charts/
 
 ## 5. Theming
 
-Colors are resolved in priority order:
-1. `Color` property on the data model (per-series/segment)
-2. Default palette via `ChartDefaults.GetColor(index)` — cycles through 12 colors
+Theming is delivered via the `ChartTheme` class and `ChartThemeProvider` component.
 
-The default palette uses vibrant colors that work on both light and dark backgrounds.
+### Resolution Order
+
+1. Per-chart `Theme` parameter (highest priority)
+2. `ChartThemeProvider` cascading value (wraps any subtree)
+3. `ChartTheme.Light` (fallback default)
+
+### Color Resolution
+
+Series/segment colors are resolved per-item:
+1. `Color` property on the data model (per-series/segment)
+2. Theme palette via `ChartTheme.GetColor(index)` — cycles through the palette
+3. Default palette (12 vibrant colors) if no custom palette is set on the theme
+
+### ChartTheme Properties
+
+| Property | Type | Light Default | Dark Default | Description |
+|----------|------|---------------|--------------|-------------|
+| TextColor | string | currentColor | #e2e8f0 | Title, axis labels, legend text |
+| GridColor | string | currentColor | #475569 | Grid line stroke |
+| GridOpacity | double | 0.1 | 0.3 | Grid line stroke-opacity |
+| CrosshairColor | string | currentColor | #94a3b8 | Crosshair line stroke |
+| CrosshairOpacity | double | 0.25 | 0.4 | Crosshair line opacity |
+| TooltipBackground | string | #000000 | #1e293b | Tooltip box fill |
+| TooltipOpacity | double | 0.88 | 0.95 | Tooltip box fill-opacity |
+| TooltipTextColor | string | #ffffff | #f1f5f9 | Tooltip text fill |
+| LabelOpacity | double | 0.7 | 0.8 | Axis label opacity |
+| Palette | IReadOnlyList\<string\>? | null (uses default) | null | Custom color palette |
+
+### Usage
+
+```razor
+<!-- Wrap app/section to theme all charts within -->
+<ChartThemeProvider Theme="ChartTheme.Dark">
+    <LineChart ... />
+    <BarChart ... />
+</ChartThemeProvider>
+
+<!-- Or per-chart override -->
+<LineChart Theme="@myCustomTheme" ... />
+```
 
 ## 6. Leader Line Labels
 

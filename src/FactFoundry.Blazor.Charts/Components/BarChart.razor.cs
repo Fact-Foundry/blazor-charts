@@ -16,6 +16,10 @@ public partial class BarChart : ComponentBase
     [Parameter] public bool CrosshairTooltip { get; set; }
     [Parameter] public int Width { get; set; } = 600;
     [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public ChartTheme? Theme { get; set; }
+    [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
+
+    private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
     private int PaddingLeft => Horizontal ? 80 : 50;
     private const int PaddingRight = 20;
@@ -53,7 +57,7 @@ public partial class BarChart : ComponentBase
     private string GetSeriesColor(int index)
     {
         var series = Series[index];
-        return series.Color ?? ChartDefaults.GetColor(index);
+        return series.Color ?? ResolvedTheme.GetColor(index);
     }
 
     private double ScaleValue(decimal value)

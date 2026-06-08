@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All donut features minus inner radius
   - Segment hover highlighting
   - Legend support
+- **ChartTheme** system — cascading theme support for all chart components
+  - Built-in `ChartTheme.Light` and `ChartTheme.Dark` presets
+  - `ChartThemeProvider` component delivers theme to all child charts via CascadingValue
+  - Per-chart `Theme` parameter override for one-off customization
+  - Configurable: text color, grid color/opacity, crosshair color/opacity, tooltip background/opacity/text, label opacity, and color palette
+  - Custom palettes via `Palette` property override the default 12-color palette
 - **BarChart** component — grouped/stacked bar chart
   - Vertical and horizontal orientations
   - Grouped (side-by-side) and stacked modes

@@ -1,0 +1,135 @@
+@page "/theme"
+
+<h2>Theme Playground</h2>
+<p style="color: var(--text-muted); margin-bottom: 1.5rem;">Edit colors below and watch charts update in real time.</p>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+    <div style="min-width: 280px;">
+        <h3>Theme Settings</h3>
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center;">
+            <label>Text Color</label>
+            <input type="color" @bind="textColor" />
+
+            <label>Grid Color</label>
+            <input type="color" @bind="gridColor" />
+
+            <label>Grid Opacity</label>
+            <input type="range" min="0" max="1" step="0.05" @bind="gridOpacity" style="width: 100px;" />
+
+            <label>Crosshair Color</label>
+            <input type="color" @bind="crosshairColor" />
+
+            <label>Tooltip Background</label>
+            <input type="color" @bind="tooltipBg" />
+
+            <label>Tooltip Text</label>
+            <input type="color" @bind="tooltipText" />
+
+            <label>Label Opacity</label>
+            <input type="range" min="0" max="1" step="0.05" @bind="labelOpacity" style="width: 100px;" />
+        </div>
+
+        <h4 style="margin-top: 1rem;">Palette</h4>
+        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+            @for (var i = 0; i < palette.Length; i++)
+            {
+                var idx = i;
+                <input type="color" @bind="palette[idx]" style="width: 32px; height: 32px; padding: 0; border: none; cursor: pointer;" />
+            }
+        </div>
+
+        <div style="margin-top: 1rem;">
+            <button @onclick="ResetToLight" style="margin-right: 0.5rem; padding: 0.25rem 0.75rem; cursor: pointer;">Reset Light</button>
+            <button @onclick="ResetToDark" style="padding: 0.25rem 0.75rem; cursor: pointer;">Reset Dark</button>
+        </div>
+    </div>
+
+    <div style="flex: 1; min-width: 400px;">
+        <BarChart Title="Revenue by Quarter"
+                  Theme="@CurrentTheme"
+                  Series="@barSeries"
+                  XAxisLabels="@barLabels"
+                  CrosshairTooltip="true"
+                  Width="600"
+                  Height="280" />
+
+        <div style="margin-top: 1.5rem;">
+            <LineChart Title="Weekly Trends"
+                       Theme="@CurrentTheme"
+                       Series="@lineSeries"
+                       XAxisLabels="@lineLabels"
+                       CrosshairTooltip="true"
+                       Width="600"
+                       Height="250" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private string textColor = "#1e293b";
+    private string gridColor = "#64748b";
+    private double gridOpacity = 0.1;
+    private string crosshairColor = "#64748b";
+    private string tooltipBg = "#000000";
+    private string tooltipText = "#ffffff";
+    private double labelOpacity = 0.7;
+
+    private string[] palette =
+    [
+        "#3B82F6", "#10B981", "#F59E0B", "#EF4444",
+        "#8B5CF6", "#06B6D4", "#F97316", "#EC4899"
+    ];
+
+    private ChartTheme CurrentTheme => new()
+    {
+        TextColor = textColor,
+        GridColor = gridColor,
+        GridOpacity = gridOpacity,
+        CrosshairColor = crosshairColor,
+        CrosshairOpacity = 0.4,
+        TooltipBackground = tooltipBg,
+        TooltipOpacity = 0.92,
+        TooltipTextColor = tooltipText,
+        LabelOpacity = labelOpacity,
+        Palette = palette.ToList(),
+    };
+
+    private void ResetToLight()
+    {
+        textColor = "#1e293b";
+        gridColor = "#64748b";
+        gridOpacity = 0.1;
+        crosshairColor = "#64748b";
+        tooltipBg = "#000000";
+        tooltipText = "#ffffff";
+        labelOpacity = 0.7;
+        palette = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#F97316", "#EC4899"];
+    }
+
+    private void ResetToDark()
+    {
+        textColor = "#e2e8f0";
+        gridColor = "#475569";
+        gridOpacity = 0.3;
+        crosshairColor = "#94a3b8";
+        tooltipBg = "#1e293b";
+        tooltipText = "#f1f5f9";
+        labelOpacity = 0.8;
+        palette = ["#60A5FA", "#34D399", "#FBBF24", "#F87171", "#A78BFA", "#22D3EE", "#FB923C", "#F472B6"];
+    }
+
+    private List<string> barLabels = ["Q1", "Q2", "Q3", "Q4"];
+    private List<ChartSeries> barSeries =
+    [
+        new() { Label = "Product A", Values = [120, 145, 160, 180] },
+        new() { Label = "Product B", Values = [90, 110, 105, 130] },
+        new() { Label = "Product C", Values = [65, 80, 95, 110] }
+    ];
+
+    private List<string> lineLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    private List<ChartSeries> lineSeries =
+    [
+        new() { Label = "Sessions", Values = [420, 510, 480, 620, 710, 380, 450] },
+        new() { Label = "Conversions", Values = [42, 55, 48, 68, 75, 35, 40] }
+    ];
+}
