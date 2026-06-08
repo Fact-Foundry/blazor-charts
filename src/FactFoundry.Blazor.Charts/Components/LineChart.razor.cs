@@ -17,19 +17,25 @@ public partial class LineChart : ComponentBase
     [Parameter] public int Width { get; set; } = 600;
     [Parameter] public int Height { get; set; } = 300;
     [Parameter] public int StrokeWidth { get; set; } = 2;
+    [Parameter] public bool Responsive { get; set; }
+    [Parameter] public int? MaxXAxisLabels { get; set; }
+    [Parameter] public ChartTheme? Theme { get; set; }
+    [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
+
+    private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
     private const int PaddingLeft = 50;
     private const int PaddingRight = 20;
     private const int PaddingTop = 40;
     private const int PaddingBottom = 40;
-    private const int LegendHeight = 30;
+    private const int BaseLegendHeight = 30;
 
     private int? _hoveredSeriesIndex;
     private int? _hoveredPointIndex;
     private int? _hoveredColumnIndex;
 
     private int ChartAreaWidth => Width - PaddingLeft - PaddingRight;
-    private int ChartAreaHeight => Height - PaddingTop - PaddingBottom - (ShowLegend ? LegendHeight : 0);
+    private int ChartAreaHeight => Height - PaddingTop - PaddingBottom - (ShowLegend ? Math.Max(BaseLegendHeight, LegendTotalHeight) : 0);
 
     private decimal MinValue => Series.SelectMany(s => s.Values).DefaultIfEmpty(0).Min();
     private decimal MaxValue => Series.SelectMany(s => s.Values).DefaultIfEmpty(0).Max();
@@ -39,7 +45,7 @@ public partial class LineChart : ComponentBase
     private string GetSeriesColor(int index)
     {
         var series = Series[index];
-        return series.Color ?? ChartDefaults.GetColor(index);
+        return series.Color ?? ResolvedTheme.GetColor(index);
     }
 
     private double ScaleX(int pointIndex)
@@ -120,11 +126,40 @@ public partial class LineChart : ComponentBase
 
     private IEnumerable<(double Position, string Label)> GetXAxisTicks()
     {
-        for (var i = 0; i < PointCount; i++)
+        if (PointCount == 0) yield break;
+
+        var step = GetLabelStep();
+        var lastIndex = PointCount - 1;
+
+        for (var i = 0; i < PointCount; i += step)
         {
+            if (step > 1 && lastIndex - i > 0 && lastIndex - i < step)
+                continue;
             var label = i < XAxisLabels.Count ? XAxisLabels[i] : i.ToString();
             yield return (ScaleX(i), label);
         }
+
+        if (step > 1 && lastIndex % step != 0)
+        {
+            var label = lastIndex < XAxisLabels.Count ? XAxisLabels[lastIndex] : lastIndex.ToString();
+            yield return (ScaleX(lastIndex), label);
+        }
+    }
+
+    private int GetLabelStep()
+    {
+        if (PointCount <= 1) return 1;
+
+        if (MaxXAxisLabels.HasValue && MaxXAxisLabels.Value > 0)
+            return Math.Max(1, (int)Math.Ceiling((double)PointCount / MaxXAxisLabels.Value));
+
+        var avgLabelWidth = XAxisLabels.Count > 0
+            ? XAxisLabels.Average(l => l.Length) * 7 + 12
+            : 30;
+        var slotWidth = (double)ChartAreaWidth / (PointCount - 1);
+        if (slotWidth >= avgLabelWidth) return 1;
+
+        return (int)Math.Ceiling(avgLabelWidth / slotWidth);
     }
 
     private void OnPointMouseOver(int seriesIndex, int pointIndex)
@@ -158,6 +193,54 @@ public partial class LineChart : ComponentBase
         if (CrosshairTooltip)
             return _hoveredColumnIndex == pointIndex;
         return _hoveredSeriesIndex == seriesIndex && _hoveredPointIndex == pointIndex;
+    }
+
+    private List<(double X, double Y, int SeriesIndex)>? _legendLayoutCache;
+    private int _legendLayoutHash;
+
+    private List<(double X, double Y, int SeriesIndex)> GetLegendLayout()
+    {
+        var hash = HashCode.Combine(Series.Count, Width, ShowLegend,
+            Series.Count > 0 ? Series.Sum(s => s.Label.Length) : 0);
+        if (_legendLayoutCache is not null && _legendLayoutHash == hash)
+            return _legendLayoutCache;
+
+        var items = new List<(double X, double Y, int SeriesIndex)>();
+        var availableWidth = Width - PaddingLeft - PaddingRight;
+        var rowHeight = 20.0;
+        var itemGap = 16.0;
+        var swatchWidth = 16.0;
+
+        double curX = PaddingLeft;
+        int row = 0;
+
+        for (var i = 0; i < Series.Count; i++)
+        {
+            var labelWidth = Series[i].Label.Length * 7 + swatchWidth + itemGap;
+            if (i > 0 && curX + labelWidth - PaddingLeft > availableWidth)
+            {
+                row++;
+                curX = PaddingLeft;
+            }
+            items.Add((curX, row * rowHeight, i));
+            curX += labelWidth;
+        }
+
+        _legendLayoutCache = items;
+        _legendLayoutHash = hash;
+        return items;
+    }
+
+    private int LegendTotalHeight
+    {
+        get
+        {
+            if (!ShowLegend || Series.Count == 0) return 0;
+            var layout = GetLegendLayout();
+            if (layout.Count == 0) return 0;
+            var rows = (int)(layout.Max(l => l.Y) / 20.0) + 1;
+            return rows * 20 + 10;
+        }
     }
 
     private (double X, double Y, double BoxWidth, double BoxHeight) GetCrosshairTooltipLayout()

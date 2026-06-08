@@ -19,6 +19,11 @@ public partial class DonutChart : ComponentBase
     [Parameter] public int InnerRadiusPercent { get; set; } = 60;
     [Parameter] public int Width { get; set; } = 300;
     [Parameter] public int Height { get; set; } = 300;
+    [Parameter] public bool Responsive { get; set; }
+    [Parameter] public ChartTheme? Theme { get; set; }
+    [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
+
+    private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
     private int LegendWidth => ShowLegendValues ? 210 : 140;
     private const int LabelMargin = 60;
@@ -52,7 +57,7 @@ public partial class DonutChart : ComponentBase
     private string GetSegmentColor(int index)
     {
         var segment = EffectiveData[index];
-        return segment.Color ?? ChartDefaults.GetColor(index);
+        return segment.Color ?? ResolvedTheme.GetColor(index);
     }
 
     private string BuildSegmentPath(int index)

@@ -40,11 +40,17 @@ src/FactFoundry.Blazor.Charts/
 │   ├── ChartSeries.cs       — Data model for line charts (label, color, values)
 │   └── ChartSegment.cs      — Data model for pie/donut charts (label, color, value)
 ├── Components/
-│   ├── LineChart.razor(.cs)  — Time-series line chart with multi-series support
-│   ├── DonutChart.razor(.cs) — Proportional donut chart with configurable hole
-│   └── PieChart.razor(.cs)   — Proportional pie chart (solid, no hole)
+│   ├── LineChart.razor(.cs)      — Time-series line chart with multi-series support
+│   ├── BarChart.razor(.cs)       — Grouped/stacked bar chart (vertical or horizontal)
+│   ├── WorldMapChart.razor(.cs)  — Choropleth world map heatmap
+│   ├── ChartThemeProvider.razor  — Cascading theme wrapper
+│   ├── DonutChart.razor(.cs)     — Proportional donut chart with configurable hole
+│   └── PieChart.razor(.cs)       — Proportional pie chart (solid, no hole)
+├── Geo/
+│   └── WorldGeometry.cs          — 174 country SVG paths + display names
 └── Themes/
-    └── ChartDefaults.cs      — Default color palette (12 colors)
+    ├── ChartDefaults.cs          — Default color palette (12 colors)
+    └── ChartTheme.cs             — Theme configuration (light/dark presets)
 ```
 
 ## 4. Component API
@@ -63,6 +69,21 @@ src/FactFoundry.Blazor.Charts/
 | Width | int | 600 | SVG width in pixels |
 | Height | int | 300 | SVG height in pixels |
 | StrokeWidth | int | 2 | Line stroke width |
+
+### BarChart
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Title | string? | null | Chart title (rendered in SVG) |
+| Series | List\<ChartSeries\> | [] | Data series to plot |
+| XAxisLabels | List\<string\> | [] | Category labels |
+| ShowLegend | bool | true | Show/hide legend |
+| ShowGrid | bool | true | Show/hide grid lines |
+| Horizontal | bool | false | Horizontal bar orientation |
+| Stacked | bool | false | Stack series instead of grouping side-by-side |
+| CrosshairTooltip | bool | false | Show all series values on category hover |
+| Width | int | 600 | SVG width in pixels |
+| Height | int | 300 | SVG height in pixels |
 
 ### DonutChart
 
@@ -90,13 +111,62 @@ src/FactFoundry.Blazor.Charts/
 | Width | int | 300 | SVG width |
 | Height | int | 300 | SVG height |
 
+### WorldMapChart
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Title | string? | null | Chart title (rendered in SVG) |
+| Data | List\<MapDataPoint\> | [] | Country code + value pairs |
+| ColorScale | string[] | ["#dbeafe", "#2563eb"] | Gradient stops (2 or more hex colors) |
+| NoDataColor | string | #e5e7eb | Fill for countries with no data |
+| ShowLegend | bool | true | Show gradient scale legend |
+| Width | int | 900 | SVG width in pixels |
+| Height | int | 450 | SVG height in pixels |
+
 ## 5. Theming
 
-Colors are resolved in priority order:
-1. `Color` property on the data model (per-series/segment)
-2. Default palette via `ChartDefaults.GetColor(index)` — cycles through 12 colors
+Theming is delivered via the `ChartTheme` class and `ChartThemeProvider` component.
 
-The default palette uses vibrant colors that work on both light and dark backgrounds.
+### Resolution Order
+
+1. Per-chart `Theme` parameter (highest priority)
+2. `ChartThemeProvider` cascading value (wraps any subtree)
+3. `ChartTheme.Light` (fallback default)
+
+### Color Resolution
+
+Series/segment colors are resolved per-item:
+1. `Color` property on the data model (per-series/segment)
+2. Theme palette via `ChartTheme.GetColor(index)` — cycles through the palette
+3. Default palette (12 vibrant colors) if no custom palette is set on the theme
+
+### ChartTheme Properties
+
+| Property | Type | Light Default | Dark Default | Description |
+|----------|------|---------------|--------------|-------------|
+| TextColor | string | currentColor | #e2e8f0 | Title, axis labels, legend text |
+| GridColor | string | currentColor | #475569 | Grid line stroke |
+| GridOpacity | double | 0.1 | 0.3 | Grid line stroke-opacity |
+| CrosshairColor | string | currentColor | #94a3b8 | Crosshair line stroke |
+| CrosshairOpacity | double | 0.25 | 0.4 | Crosshair line opacity |
+| TooltipBackground | string | #000000 | #1e293b | Tooltip box fill |
+| TooltipOpacity | double | 0.88 | 0.95 | Tooltip box fill-opacity |
+| TooltipTextColor | string | #ffffff | #f1f5f9 | Tooltip text fill |
+| LabelOpacity | double | 0.7 | 0.8 | Axis label opacity |
+| Palette | IReadOnlyList\<string\>? | null (uses default) | null | Custom color palette |
+
+### Usage
+
+```razor
+<!-- Wrap app/section to theme all charts within -->
+<ChartThemeProvider Theme="ChartTheme.Dark">
+    <LineChart ... />
+    <BarChart ... />
+</ChartThemeProvider>
+
+<!-- Or per-chart override -->
+<LineChart Theme="@myCustomTheme" ... />
+```
 
 ## 6. Leader Line Labels
 
@@ -113,6 +183,36 @@ The chart radius shrinks automatically when labels are on to make room. Hover to
 
 Blazor's Razor compiler reserves the `<text>` tag as a directive. SVG `<text>` elements are rendered via `MarkupString` to bypass this limitation.
 
-## 8. Target Frameworks
+## 8. World Map Geography Data
+
+### Source
+
+Country boundaries in `WorldGeometry.cs` are derived from the [Natural Earth 110m Admin 0 Countries](https://www.naturalearthdata.com/downloads/110m-cultural-vectors/) dataset (public domain). The 110m scale is intentionally low-resolution — simplified enough for fast SVG rendering while remaining recognizable.
+
+### Maintenance
+
+Country borders change. Natural Earth typically releases updates roughly once a year, though the 110m tier is stable enough that only major geopolitical events (new countries, sovereignty transfers) produce visible changes.
+
+**Check annually** (or on major version bumps) whether the upstream dataset has been updated:
+
+1. Download the latest GeoJSON:
+   ```
+   curl -sL "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson" -o /tmp/ne_110m_countries.geojson
+   ```
+2. Run the converter script (kept at project root as `tools/convert_geojson.py`):
+   ```
+   python3 tools/convert_geojson.py > src/FactFoundry.Blazor.Charts/Geo/WorldGeometry.cs
+   ```
+3. Diff the output against the current file to see what changed.
+
+### Projection
+
+All coordinates use equirectangular projection mapped to a 1000×500 internal viewBox:
+- `x = (longitude + 180) / 360 × 1000`
+- `y = (90 − latitude) / 180 × 500`
+
+The component scales from this internal coordinate space to the user-specified `Width`/`Height` via an SVG `<g transform="scale(...)">`.
+
+## 9. Target Frameworks
 
 Multi-targets .NET 8.0, 9.0, and 10.0 to maximize compatibility. Uses `Microsoft.AspNetCore.Components.Web` package reference (not FrameworkReference) to support both Server and WebAssembly hosting models.

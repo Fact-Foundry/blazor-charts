@@ -1,10 +1,14 @@
 @namespace FactFoundry.Blazor.Charts.Components
 
-<svg width="@Width" height="@Height" xmlns="http://www.w3.org/2000/svg" role="img">
+<svg width="@(Responsive ? "100%" : $"{Width}")"
+     height="@(Responsive ? null : $"{Height}")"
+     viewBox="@(Responsive ? $"0 0 {Width} {Height}" : null)"
+     preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+     xmlns="http://www.w3.org/2000/svg" role="img">
     @if (!string.IsNullOrEmpty(Title))
     {
         <title>@Title</title>
-        @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"currentColor\">{Title}</text>")
+        @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"{ResolvedTheme.TextColor}\">{Title}</text>")
     }
 
     @* Pie segments *@
@@ -32,7 +36,7 @@
                   x2="@lbl.EndX.ToString("F1")" y2="@lbl.EndY.ToString("F1")"
                   stroke="@lbl.Color" stroke-width="1" />
             <circle cx="@lbl.EndX.ToString("F1")" cy="@lbl.EndY.ToString("F1")" r="2" fill="@lbl.Color" />
-            @((MarkupString)$"<text x=\"{(lbl.Anchor == "start" ? lbl.EndX + 4 : lbl.EndX - 4).ToString("F1")}\" y=\"{(lbl.EndY + 4).ToString("F1")}\" text-anchor=\"{lbl.Anchor}\" font-size=\"10\" fill=\"currentColor\">{lbl.Text}</text>")
+            @((MarkupString)$"<text x=\"{(lbl.Anchor == "start" ? lbl.EndX + 4 : lbl.EndX - 4).ToString("F1")}\" y=\"{(lbl.EndY + 4).ToString("F1")}\" text-anchor=\"{lbl.Anchor}\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\">{lbl.Text}</text>")
         }
     }
 
@@ -44,7 +48,7 @@
         var tooltipX = CenterX + (Radius + 20) * Math.Cos(midAngleRad);
         var tooltipY = CenterY + (Radius + 20) * Math.Sin(midAngleRad);
         var anchor = Math.Cos(midAngleRad) >= 0 ? "start" : "end";
-        @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{tooltipY.ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"currentColor\">{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})</text>")
+        @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{tooltipY.ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})</text>")
     }
 
     @* Legend *@
@@ -56,7 +60,7 @@
             var legendY = 40 + i * 22;
             var color = GetSegmentColor(i);
             <rect x="@legendX" y="@(legendY - 8)" width="10" height="10" rx="2" fill="@color" />
-            @((MarkupString)$"<text x=\"{legendX + 14}\" y=\"{legendY}\" font-size=\"10\" fill=\"currentColor\">{GetLegendText(i)}</text>")
+            @((MarkupString)$"<text x=\"{legendX + 14}\" y=\"{legendY}\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\">{GetLegendText(i)}</text>")
         }
     }
 </svg>

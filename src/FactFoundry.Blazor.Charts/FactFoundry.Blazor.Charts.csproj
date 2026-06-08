@@ -8,12 +8,12 @@
     <PackageId>FactFoundry.Blazor.Charts</PackageId>
     <Authors>Kevin Williams</Authors>
     <Company>FactFoundry</Company>
-    <Description>A zero-dependency, pure .NET charting library for Blazor. Renders Line, Donut, and Pie charts as SVG via Razor components — no JavaScript, no interop, no external dependencies.</Description>
+    <Description>A zero-dependency, pure .NET charting library for Blazor. Renders Line, Bar, Donut, Pie, and World Map charts as SVG via Razor components — no JavaScript, no interop, no external dependencies. Includes built-in light/dark theming and crosshair tooltips.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Fact-Foundry/blazor-charts</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Fact-Foundry/blazor-charts</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>blazor;charts;svg;line-chart;donut-chart;pie-chart;no-javascript;razor-components</PackageTags>
+    <PackageTags>blazor;charts;svg;line-chart;bar-chart;donut-chart;pie-chart;world-map;choropleth;heatmap;theming;no-javascript;razor-components</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 

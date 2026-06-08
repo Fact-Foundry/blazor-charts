@@ -8,6 +8,7 @@
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="showArea" /> Show Area</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLegend" /> Show Legend</label>
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="crosshairTooltip" /> Crosshair Tooltip</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="responsive" /> Responsive</label>
 </div>
 
 <h3>Multi-Series</h3>
@@ -19,6 +20,7 @@
            ShowArea="showArea"
            ShowLegend="showLegend"
            CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
            Width="700"
            Height="350" />
 
@@ -30,8 +32,33 @@
            SmoothLines="smoothLines"
            ShowLegend="false"
            CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
            Width="700"
            Height="250" />
+
+<h3 style="margin-top: 2rem;">Many Data Points (auto-thinned labels)</h3>
+<LineChart Title="Daily Revenue — 30 Days"
+           Series="@denseTimeSeries"
+           XAxisLabels="@denseLabels"
+           ShowGrid="showGrid"
+           SmoothLines="true"
+           ShowLegend="false"
+           CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
+           Width="700"
+           Height="250" />
+
+<h3 style="margin-top: 2rem;">Many Series (legend wrapping)</h3>
+<LineChart Title="Sessions by Page"
+           Series="@manySeries"
+           XAxisLabels="@dateLabels"
+           ShowGrid="showGrid"
+           SmoothLines="smoothLines"
+           ShowLegend="showLegend"
+           CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
+           Width="700"
+           Height="400" />
 
 @code {
     private bool showGrid = true;
@@ -39,6 +66,7 @@
     private bool showArea;
     private bool showLegend = true;
     private bool crosshairTooltip;
+    private bool responsive;
 
     private List<string> dateLabels =
     [
@@ -55,5 +83,24 @@
     private List<ChartSeries> singleSeries =
     [
         new() { Label = "Page Views", Values = [1200, 1350, 1420, 1280, 1550, 980, 1100] }
+    ];
+
+    private List<string> denseLabels = Enumerable.Range(1, 30).Select(i => $"Jan {i}").ToList();
+
+    private List<ChartSeries> denseTimeSeries =
+    [
+        new() { Label = "Revenue", Color = "#8B5CF6", Values = [420, 510, 480, 620, 710, 680, 590, 640, 720, 810, 750, 690, 830, 780, 850, 920, 870, 960, 890, 1020, 980, 1050, 1100, 940, 1080, 1150, 1090, 1200, 1140, 1250] }
+    ];
+
+    private List<ChartSeries> manySeries =
+    [
+        new() { Label = "Homepage", Values = [320, 350, 380, 340, 410, 290, 310] },
+        new() { Label = "Pricing", Values = [180, 210, 195, 230, 220, 160, 175] },
+        new() { Label = "Documentation", Values = [250, 280, 310, 290, 340, 220, 260] },
+        new() { Label = "Blog", Values = [90, 120, 105, 140, 130, 80, 95] },
+        new() { Label = "Dashboard", Values = [420, 450, 480, 440, 510, 390, 410] },
+        new() { Label = "Settings", Values = [45, 55, 50, 60, 58, 40, 48] },
+        new() { Label = "Profile", Values = [110, 130, 125, 145, 138, 95, 108] },
+        new() { Label = "API Reference", Values = [200, 220, 240, 210, 260, 180, 195] }
     ];
 }

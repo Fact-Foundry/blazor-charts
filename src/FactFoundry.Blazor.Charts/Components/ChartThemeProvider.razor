@@ -1,0 +1,10 @@
+@namespace FactFoundry.Blazor.Charts.Components
+
+<CascadingValue Value="Theme">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public ChartTheme Theme { get; set; } = ChartTheme.Light;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

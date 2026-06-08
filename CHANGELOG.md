@@ -25,11 +25,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All donut features minus inner radius
   - Segment hover highlighting
   - Legend support
+- **WorldMapChart** component — choropleth world map heatmap
+  - 174 countries with Natural Earth 110m boundaries (equirectangular projection)
+  - Data-driven color fill via configurable multi-stop color scale
+  - Hover tooltips showing country name and value
+  - Gradient legend with min/max labels
+  - Supports 2-color and 3-color (or more) gradient scales
+  - No-data countries rendered in neutral gray
+  - Theme-aware (text, grid/stroke, tooltip colors)
+- **ChartTheme** system — cascading theme support for all chart components
+  - Built-in `ChartTheme.Light` and `ChartTheme.Dark` presets
+  - `ChartThemeProvider` component delivers theme to all child charts via CascadingValue
+  - Per-chart `Theme` parameter override for one-off customization
+  - Configurable: text color, grid color/opacity, crosshair color/opacity, tooltip background/opacity/text, label opacity, and color palette
+  - Custom palettes via `Palette` property override the default 12-color palette
+- **BarChart** component — grouped/stacked bar chart
+  - Vertical and horizontal orientations
+  - Grouped (side-by-side) and stacked modes
+  - Single and multi-series support
+  - Grid lines, axis labels, and legend
+  - Hover tooltips on individual bars
+  - Crosshair tooltip mode (shows all series values for a category)
 - **ShowLabels** parameter on PieChart and DonutChart
   - Leader line callout labels from each slice edge
   - Displays "Label: Value (Pct%)" format
   - Automatically adjusts chart radius to fit labels
   - Hover tooltip suppressed when labels are visible
+- **X-axis label auto-thinning** — prevents label crowding on dense data sets
+  - Automatically calculates how many labels fit without overlapping based on label length and chart width
+  - Optional `MaxXAxisLabels` parameter to manually cap the number of visible labels
+  - Applies to both LineChart and BarChart (vertical and horizontal orientations)
+  - Shows evenly spaced labels (every Nth) to maintain readability
+  - Always renders the last (most recent) label; suppresses second-to-last if it would collide
+- **Legend wrapping** — multi-row legend layout for charts with many series
+  - Automatically wraps legend items to additional rows when they exceed chart width
+  - Chart area height adjusts to accommodate multi-row legends
+  - Applies to both LineChart and BarChart
+- **Responsive auto-sizing** — `Responsive` parameter on all chart components
+  - Sets SVG `width="100%"` with `viewBox` and `preserveAspectRatio="xMidYMid meet"`
+  - Charts scale fluidly to fill their container while maintaining aspect ratio
+  - No JavaScript required — pure SVG responsive behavior
+  - Defaults to `false` (fixed dimensions) for backward compatibility
 - **Data models**: `ChartSeries` (line charts), `ChartSegment` (pie/donut charts)
 - **Default color palette**: 12 colors that work on light and dark backgrounds
 - **Multi-target**: .NET 8.0, 9.0, and 10.0

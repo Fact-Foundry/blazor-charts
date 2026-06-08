@@ -1,0 +1,191 @@
+@namespace FactFoundry.Blazor.Charts.Components
+
+<svg width="@(Responsive ? "100%" : $"{Width}")"
+     height="@(Responsive ? null : $"{Height}")"
+     viewBox="@(Responsive ? $"0 0 {Width} {Height}" : null)"
+     preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+     xmlns="http://www.w3.org/2000/svg" role="img">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <title>@Title</title>
+        @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"{ResolvedTheme.TextColor}\">{Title}</text>")
+    }
+
+    @* Grid lines *@
+    @if (ShowGrid && Series.Count > 0)
+    {
+        @foreach (var tick in GetValueAxisTicks())
+        {
+            @if (Horizontal)
+            {
+                <line x1="@tick.Position.ToString("F1")" y1="@PaddingTop"
+                      x2="@tick.Position.ToString("F1")" y2="@(PaddingTop + ChartAreaHeight)"
+                      stroke="@ResolvedTheme.GridColor" stroke-opacity="@ResolvedTheme.GridOpacity.ToString("F2")" stroke-dasharray="4,4" />
+            }
+            else
+            {
+                <line x1="@PaddingLeft" y1="@tick.Position.ToString("F1")"
+                      x2="@(Width - PaddingRight)" y2="@tick.Position.ToString("F1")"
+                      stroke="@ResolvedTheme.GridColor" stroke-opacity="@ResolvedTheme.GridOpacity.ToString("F2")" stroke-dasharray="4,4" />
+            }
+        }
+    }
+
+    @* Value axis labels *@
+    @if (Series.Count > 0)
+    {
+        @foreach (var tick in GetValueAxisTicks())
+        {
+            @if (Horizontal)
+            {
+                var labelY = PaddingTop + ChartAreaHeight + 20;
+                @((MarkupString)$"<text x=\"{tick.Position.ToString("F1")}\" y=\"{labelY}\" text-anchor=\"middle\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{tick.Label}</text>")
+            }
+            else
+            {
+                @((MarkupString)$"<text x=\"{PaddingLeft - 8}\" y=\"{(tick.Position + 4).ToString("F1")}\" text-anchor=\"end\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{tick.Label}</text>")
+            }
+        }
+    }
+
+    @* Category axis labels *@
+    @if (Series.Count > 0)
+    {
+        @foreach (var tick in GetCategoryAxisTicks())
+        {
+            @if (Horizontal)
+            {
+                @((MarkupString)$"<text x=\"{PaddingLeft - 8}\" y=\"{(tick.Position + 4).ToString("F1")}\" text-anchor=\"end\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{tick.Label}</text>")
+            }
+            else
+            {
+                var labelY = PaddingTop + ChartAreaHeight + 20;
+                @((MarkupString)$"<text x=\"{tick.Position.ToString("F1")}\" y=\"{labelY}\" text-anchor=\"middle\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\" opacity=\"{ResolvedTheme.LabelOpacity.ToString("F2")}\">{tick.Label}</text>")
+            }
+        }
+    }
+
+    @* Bars *@
+    @for (var seriesIdx = 0; seriesIdx < Series.Count; seriesIdx++)
+    {
+        var sIdx = seriesIdx;
+        var color = GetSeriesColor(seriesIdx);
+        @for (var catIdx = 0; catIdx < CategoryCount; catIdx++)
+        {
+            var cIdx = catIdx;
+            var rect = GetBarRect(seriesIdx, catIdx);
+            @if (rect.W > 0 && rect.H > 0)
+            {
+                var isHovered = IsBarHovered(seriesIdx, catIdx);
+                <rect x="@rect.X.ToString("F1")" y="@rect.Y.ToString("F1")"
+                      width="@rect.W.ToString("F1")" height="@rect.H.ToString("F1")"
+                      rx="2" fill="@color"
+                      fill-opacity="@(isHovered ? "1" : "0.85")"
+                      @onmouseover="() => OnBarMouseOver(sIdx, cIdx)"
+                      @onmouseout="OnBarMouseOut"
+                      style="cursor: pointer; transition: fill-opacity 0.15s;" />
+            }
+        }
+    }
+
+    @* Crosshair hover zones *@
+    @if (CrosshairTooltip && CategoryCount > 0)
+    {
+        @for (var i = 0; i < CategoryCount; i++)
+        {
+            var idx = i;
+            @if (Horizontal)
+            {
+                var groupHeight = (double)ChartAreaHeight / CategoryCount;
+                var zoneY = PaddingTop + groupHeight * i;
+                <rect x="@PaddingLeft" y="@zoneY.ToString("F1")"
+                      width="@ChartAreaWidth" height="@groupHeight.ToString("F1")"
+                      fill="transparent"
+                      @onmouseover="() => OnCategoryMouseOver(idx)"
+                      @onmouseout="OnCategoryMouseOut"
+                      style="cursor: crosshair;" />
+            }
+            else
+            {
+                var groupWidth = (double)ChartAreaWidth / CategoryCount;
+                var zoneX = PaddingLeft + groupWidth * i;
+                <rect x="@zoneX.ToString("F1")" y="@PaddingTop"
+                      width="@groupWidth.ToString("F1")" height="@ChartAreaHeight"
+                      fill="transparent"
+                      @onmouseover="() => OnCategoryMouseOver(idx)"
+                      @onmouseout="OnCategoryMouseOut"
+                      style="cursor: crosshair;" />
+            }
+        }
+    }
+
+    @* Single-bar tooltip *@
+    @if (!CrosshairTooltip && _hoveredSeriesIndex is not null && _hoveredCategoryIndex is not null)
+    {
+        var rect = GetBarRect(_hoveredSeriesIndex.Value, _hoveredCategoryIndex.Value);
+        var tx = rect.X + rect.W / 2;
+        var ty = Horizontal ? rect.Y + rect.H / 2 - 12 : rect.Y - 12;
+        <g>
+            <rect x="@((tx - 70).ToString("F1"))" y="@((ty - 14).ToString("F1"))"
+                  width="140" height="20" rx="4" fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
+            @((MarkupString)$"<text x=\"{tx.ToString("F1")}\" y=\"{(ty - 1).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{GetSingleTooltipText()}</text>")
+        </g>
+    }
+
+    @* Crosshair tooltip *@
+    @if (CrosshairTooltip && _hoveredCategoryIndex is not null)
+    {
+        var catLabel = _hoveredCategoryIndex.Value < XAxisLabels.Count
+            ? XAxisLabels[_hoveredCategoryIndex.Value]
+            : _hoveredCategoryIndex.Value.ToString();
+        var tipPos = GetCrosshairTooltipPos();
+
+        @* Crosshair line *@
+        @if (Horizontal)
+        {
+            var center = PaddingTop + GetCategoryCenter(_hoveredCategoryIndex.Value);
+            <line x1="@PaddingLeft" y1="@center.ToString("F1")"
+                  x2="@(PaddingLeft + ChartAreaWidth)" y2="@center.ToString("F1")"
+                  stroke="@ResolvedTheme.CrosshairColor" stroke-opacity="@ResolvedTheme.CrosshairOpacity.ToString("F2")" stroke-dasharray="4,4" />
+        }
+        else
+        {
+            var center = PaddingLeft + GetCategoryCenter(_hoveredCategoryIndex.Value);
+            <line x1="@center.ToString("F1")" y1="@PaddingTop"
+                  x2="@center.ToString("F1")" y2="@(PaddingTop + ChartAreaHeight)"
+                  stroke="@ResolvedTheme.CrosshairColor" stroke-opacity="@ResolvedTheme.CrosshairOpacity.ToString("F2")" stroke-dasharray="4,4" />
+        }
+
+        @* Tooltip box *@
+        <rect x="@tipPos.X.ToString("F1")" y="@tipPos.Y.ToString("F1")"
+              width="@tipPos.BoxWidth.ToString("F1")" height="@tipPos.BoxHeight.ToString("F1")"
+              rx="4" fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
+
+        @((MarkupString)$"<text x=\"{(tipPos.X + 10).ToString("F1")}\" y=\"{(tipPos.Y + 17).ToString("F1")}\" font-size=\"11\" font-weight=\"bold\" fill=\"{ResolvedTheme.TooltipTextColor}\">{catLabel}</text>")
+
+        @for (var i = 0; i < Series.Count; i++)
+        {
+            var rowY = tipPos.Y + 30 + i * 18;
+            var color = GetSeriesColor(i);
+            var val = _hoveredCategoryIndex.Value < Series[i].Values.Count
+                ? Series[i].Values[_hoveredCategoryIndex.Value].ToString("N0")
+                : "—";
+            <circle cx="@((tipPos.X + 14).ToString("F1"))" cy="@((rowY + 3).ToString("F1"))" r="4" fill="@color" />
+            @((MarkupString)$"<text x=\"{(tipPos.X + 24).ToString("F1")}\" y=\"{(rowY + 7).ToString("F1")}\" font-size=\"10\" fill=\"{ResolvedTheme.TooltipTextColor}\">{Series[i].Label}: {val}</text>")
+        }
+    }
+
+    @* Legend *@
+    @if (ShowLegend && Series.Count > 0)
+    {
+        var layout = GetLegendLayout();
+        var legendBaseY = Height - LegendTotalHeight + 5;
+        @foreach (var item in layout)
+        {
+            var color = GetSeriesColor(item.SeriesIndex);
+            var iy = legendBaseY + item.Y;
+            <rect x="@item.X.ToString("F0")" y="@((iy - 8).ToString("F0"))" width="12" height="12" rx="2" fill="@color" />
+            @((MarkupString)$"<text x=\"{(item.X + 16).ToString("F0")}\" y=\"{iy.ToString("F0")}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{Series[item.SeriesIndex].Label}</text>")
+        }
+    }
+</svg>
