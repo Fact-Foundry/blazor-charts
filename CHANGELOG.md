@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All donut features minus inner radius
   - Segment hover highlighting
   - Legend support
+- **BarChart** component — grouped/stacked bar chart
+  - Vertical and horizontal orientations
+  - Grouped (side-by-side) and stacked modes
+  - Single and multi-series support
+  - Grid lines, axis labels, and legend
+  - Hover tooltips on individual bars
+  - Crosshair tooltip mode (shows all series values for a category)
 - **ShowLabels** parameter on PieChart and DonutChart
   - Leader line callout labels from each slice edge
   - Displays "Label: Value (Pct%)" format

@@ -41,6 +41,7 @@ src/FactFoundry.Blazor.Charts/
 │   └── ChartSegment.cs      — Data model for pie/donut charts (label, color, value)
 ├── Components/
 │   ├── LineChart.razor(.cs)  — Time-series line chart with multi-series support
+│   ├── BarChart.razor(.cs)   — Grouped/stacked bar chart (vertical or horizontal)
 │   ├── DonutChart.razor(.cs) — Proportional donut chart with configurable hole
 │   └── PieChart.razor(.cs)   — Proportional pie chart (solid, no hole)
 └── Themes/
@@ -63,6 +64,21 @@ src/FactFoundry.Blazor.Charts/
 | Width | int | 600 | SVG width in pixels |
 | Height | int | 300 | SVG height in pixels |
 | StrokeWidth | int | 2 | Line stroke width |
+
+### BarChart
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Title | string? | null | Chart title (rendered in SVG) |
+| Series | List\<ChartSeries\> | [] | Data series to plot |
+| XAxisLabels | List\<string\> | [] | Category labels |
+| ShowLegend | bool | true | Show/hide legend |
+| ShowGrid | bool | true | Show/hide grid lines |
+| Horizontal | bool | false | Horizontal bar orientation |
+| Stacked | bool | false | Stack series instead of grouping side-by-side |
+| CrosshairTooltip | bool | false | Show all series values on category hover |
+| Width | int | 600 | SVG width in pixels |
+| Height | int | 300 | SVG height in pixels |
 
 ### DonutChart
 

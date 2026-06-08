@@ -1,0 +1,60 @@
+@page "/bar-chart"
+@rendermode InteractiveServer
+
+<h2>Bar Chart</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showGrid" /> Show Grid</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLegend" /> Show Legend</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="horizontal" /> Horizontal</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="stacked" /> Stacked</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="crosshairTooltip" /> Crosshair Tooltip</label>
+</div>
+
+<h3>Multi-Series (Grouped)</h3>
+<BarChart Title="Quarterly Revenue by Region"
+          Series="@multiSeries"
+          XAxisLabels="@quarterLabels"
+          ShowGrid="showGrid"
+          ShowLegend="showLegend"
+          Horizontal="horizontal"
+          Stacked="stacked"
+          CrosshairTooltip="crosshairTooltip"
+          Width="700"
+          Height="350" />
+
+<h3 style="margin-top: 2rem;">Single Series</h3>
+<BarChart Title="Monthly Users"
+          Series="@singleSeries"
+          XAxisLabels="@monthLabels"
+          ShowGrid="showGrid"
+          ShowLegend="false"
+          Horizontal="horizontal"
+          Stacked="stacked"
+          CrosshairTooltip="crosshairTooltip"
+          Width="700"
+          Height="300" />
+
+@code {
+    private bool showGrid = true;
+    private bool showLegend = true;
+    private bool horizontal;
+    private bool stacked;
+    private bool crosshairTooltip;
+
+    private List<string> quarterLabels = ["Q1", "Q2", "Q3", "Q4"];
+
+    private List<ChartSeries> multiSeries =
+    [
+        new() { Label = "North America", Color = "#3B82F6", Values = [120, 145, 160, 180] },
+        new() { Label = "Europe", Color = "#F59E0B", Values = [90, 110, 105, 130] },
+        new() { Label = "Asia Pacific", Color = "#10B981", Values = [65, 80, 95, 110] }
+    ];
+
+    private List<string> monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+    private List<ChartSeries> singleSeries =
+    [
+        new() { Label = "Users", Values = [4200, 5100, 4800, 6200, 7100, 6800] }
+    ];
+}
