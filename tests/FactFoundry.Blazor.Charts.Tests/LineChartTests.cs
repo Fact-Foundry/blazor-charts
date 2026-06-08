@@ -176,4 +176,36 @@ public class LineChartTests : BunitContext
         var labelCount = cut.Markup.Split("Day").Length - 1;
         Assert.True(labelCount <= 5, $"Expected at most 5 labels, got {labelCount}");
     }
+
+    [Fact]
+    public void Last_Label_Always_Rendered_When_Thinning()
+    {
+        var labels = Enumerable.Range(1, 30).Select(i => $"2024-01-{i:D2}").ToList();
+        var values = Enumerable.Range(1, 30).Select(i => (decimal)i).ToList();
+
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Series, [new ChartSeries { Label = "Test", Values = values }])
+            .Add(p => p.XAxisLabels, labels)
+            .Add(p => p.Width, 600)
+            .Add(p => p.Height, 300));
+
+        Assert.Contains("2024-01-30", cut.Markup);
+    }
+
+    [Fact]
+    public void Legend_Wraps_With_Many_Series()
+    {
+        var series = Enumerable.Range(1, 8)
+            .Select(i => new ChartSeries { Label = $"Series {i}", Values = [i, i + 1, i + 2] })
+            .ToList();
+
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Series, series)
+            .Add(p => p.ShowLegend, true)
+            .Add(p => p.Width, 600)
+            .Add(p => p.Height, 300));
+
+        for (var i = 1; i <= 8; i++)
+            Assert.Contains($"Series {i}", cut.Markup);
+    }
 }

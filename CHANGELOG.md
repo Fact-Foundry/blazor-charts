@@ -56,6 +56,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optional `MaxXAxisLabels` parameter to manually cap the number of visible labels
   - Applies to both LineChart and BarChart (vertical and horizontal orientations)
   - Shows evenly spaced labels (every Nth) to maintain readability
+  - Always renders the last (most recent) label; suppresses second-to-last if it would collide
+- **Legend wrapping** — multi-row legend layout for charts with many series
+  - Automatically wraps legend items to additional rows when they exceed chart width
+  - Chart area height adjusts to accommodate multi-row legends
+  - Applies to both LineChart and BarChart
 - **Responsive auto-sizing** — `Responsive` parameter on all chart components
   - Sets SVG `width="100%"` with `viewBox` and `preserveAspectRatio="xMidYMid meet"`
   - Charts scale fluidly to fill their container while maintaining aspect ratio

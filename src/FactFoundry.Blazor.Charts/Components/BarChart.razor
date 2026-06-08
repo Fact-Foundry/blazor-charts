@@ -178,14 +178,14 @@
     @* Legend *@
     @if (ShowLegend && Series.Count > 0)
     {
-        var legendY = Height - 15;
-        var legendStartX = PaddingLeft;
-        @for (var i = 0; i < Series.Count; i++)
+        var layout = GetLegendLayout();
+        var legendBaseY = Height - LegendTotalHeight + 5;
+        @foreach (var item in layout)
         {
-            var offsetX = legendStartX + i * 120;
-            var color = GetSeriesColor(i);
-            <rect x="@offsetX" y="@(legendY - 8)" width="12" height="12" rx="2" fill="@color" />
-            @((MarkupString)$"<text x=\"{offsetX + 16}\" y=\"{legendY}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{Series[i].Label}</text>")
+            var color = GetSeriesColor(item.SeriesIndex);
+            var iy = legendBaseY + item.Y;
+            <rect x="@item.X.ToString("F0")" y="@((iy - 8).ToString("F0"))" width="12" height="12" rx="2" fill="@color" />
+            @((MarkupString)$"<text x=\"{(item.X + 16).ToString("F0")}\" y=\"{iy.ToString("F0")}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{Series[item.SeriesIndex].Label}</text>")
         }
     }
 </svg>
