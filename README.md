@@ -186,6 +186,16 @@ All charts support fluid sizing via the `Responsive` parameter. When enabled, ch
 </div>
 ```
 
+## Label Auto-Thinning
+
+When a chart has many data points (e.g., 30 days of data), X-axis labels are automatically thinned to prevent overlap. The algorithm estimates label widths and shows every Nth label to maintain readability.
+
+To manually cap the number of visible labels:
+
+```razor
+<LineChart MaxXAxisLabels="10" XAxisLabels="@thirtyDayLabels" ... />
+```
+
 ## Design Principles
 
 - **Zero dependencies** — pure .NET and Blazor, nothing else

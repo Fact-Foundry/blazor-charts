@@ -142,4 +142,38 @@ public class LineChartTests : BunitContext
         Assert.Null(svg.GetAttribute("viewBox"));
         Assert.Null(svg.GetAttribute("preserveAspectRatio"));
     }
+
+    [Fact]
+    public void Thins_Labels_When_Too_Many_Points()
+    {
+        var labels = Enumerable.Range(1, 30).Select(i => $"2024-01-{i:D2}").ToList();
+        var values = Enumerable.Range(1, 30).Select(i => (decimal)i).ToList();
+
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Series, [new ChartSeries { Label = "Test", Values = values }])
+            .Add(p => p.XAxisLabels, labels)
+            .Add(p => p.Width, 600)
+            .Add(p => p.Height, 300));
+
+        var labelCount = cut.Markup.Split("2024-01-").Length - 1;
+        Assert.True(labelCount < 30, $"Expected fewer than 30 labels rendered, got {labelCount}");
+        Assert.True(labelCount >= 5, $"Expected at least 5 labels rendered, got {labelCount}");
+    }
+
+    [Fact]
+    public void MaxXAxisLabels_Limits_Label_Count()
+    {
+        var labels = Enumerable.Range(1, 20).Select(i => $"Day{i}").ToList();
+        var values = Enumerable.Range(1, 20).Select(i => (decimal)i).ToList();
+
+        var cut = Render<LineChart>(parameters => parameters
+            .Add(p => p.Series, [new ChartSeries { Label = "Test", Values = values }])
+            .Add(p => p.XAxisLabels, labels)
+            .Add(p => p.MaxXAxisLabels, 5)
+            .Add(p => p.Width, 600)
+            .Add(p => p.Height, 300));
+
+        var labelCount = cut.Markup.Split("Day").Length - 1;
+        Assert.True(labelCount <= 5, $"Expected at most 5 labels, got {labelCount}");
+    }
 }

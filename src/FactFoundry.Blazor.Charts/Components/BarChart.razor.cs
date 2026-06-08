@@ -17,6 +17,7 @@ public partial class BarChart : ComponentBase
     [Parameter] public int Width { get; set; } = 600;
     [Parameter] public int Height { get; set; } = 300;
     [Parameter] public bool Responsive { get; set; }
+    [Parameter] public int? MaxXAxisLabels { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 
@@ -183,7 +184,10 @@ public partial class BarChart : ComponentBase
 
     private IEnumerable<(double Position, string Label)> GetCategoryAxisTicks()
     {
-        for (var i = 0; i < CategoryCount; i++)
+        if (CategoryCount == 0) yield break;
+
+        var step = GetLabelStep();
+        for (var i = 0; i < CategoryCount; i += step)
         {
             var label = i < XAxisLabels.Count ? XAxisLabels[i] : i.ToString();
             var center = GetCategoryCenter(i);
@@ -196,6 +200,28 @@ public partial class BarChart : ComponentBase
 
             yield return (position, label);
         }
+    }
+
+    private int GetLabelStep()
+    {
+        if (CategoryCount <= 1) return 1;
+
+        if (MaxXAxisLabels.HasValue && MaxXAxisLabels.Value > 0)
+            return Math.Max(1, (int)Math.Ceiling((double)CategoryCount / MaxXAxisLabels.Value));
+
+        var avgLabelWidth = XAxisLabels.Count > 0
+            ? XAxisLabels.Average(l => l.Length) * 7 + 12
+            : 30;
+
+        double slotSize;
+        if (Horizontal)
+            slotSize = (double)ChartAreaHeight / CategoryCount;
+        else
+            slotSize = (double)ChartAreaWidth / CategoryCount;
+
+        if (slotSize >= avgLabelWidth) return 1;
+
+        return (int)Math.Ceiling(avgLabelWidth / slotSize);
     }
 
     private void OnBarMouseOver(int seriesIndex, int categoryIndex)

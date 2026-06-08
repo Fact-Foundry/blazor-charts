@@ -36,6 +36,18 @@
            Width="700"
            Height="250" />
 
+<h3 style="margin-top: 2rem;">Many Data Points (auto-thinned labels)</h3>
+<LineChart Title="Daily Revenue — 30 Days"
+           Series="@denseTimeSeries"
+           XAxisLabels="@denseLabels"
+           ShowGrid="showGrid"
+           SmoothLines="true"
+           ShowLegend="false"
+           CrosshairTooltip="crosshairTooltip"
+           Responsive="responsive"
+           Width="700"
+           Height="250" />
+
 @code {
     private bool showGrid = true;
     private bool smoothLines;
@@ -59,5 +71,12 @@
     private List<ChartSeries> singleSeries =
     [
         new() { Label = "Page Views", Values = [1200, 1350, 1420, 1280, 1550, 980, 1100] }
+    ];
+
+    private List<string> denseLabels = Enumerable.Range(1, 30).Select(i => $"Jan {i}").ToList();
+
+    private List<ChartSeries> denseTimeSeries =
+    [
+        new() { Label = "Revenue", Color = "#8B5CF6", Values = [420, 510, 480, 620, 710, 680, 590, 640, 720, 810, 750, 690, 830, 780, 850, 920, 870, 960, 890, 1020, 980, 1050, 1100, 940, 1080, 1150, 1090, 1200, 1140, 1250] }
     ];
 }

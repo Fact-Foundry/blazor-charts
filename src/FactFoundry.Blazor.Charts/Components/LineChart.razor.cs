@@ -18,6 +18,7 @@ public partial class LineChart : ComponentBase
     [Parameter] public int Height { get; set; } = 300;
     [Parameter] public int StrokeWidth { get; set; } = 2;
     [Parameter] public bool Responsive { get; set; }
+    [Parameter] public int? MaxXAxisLabels { get; set; }
     [Parameter] public ChartTheme? Theme { get; set; }
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 
@@ -125,11 +126,30 @@ public partial class LineChart : ComponentBase
 
     private IEnumerable<(double Position, string Label)> GetXAxisTicks()
     {
-        for (var i = 0; i < PointCount; i++)
+        if (PointCount == 0) yield break;
+
+        var step = GetLabelStep();
+        for (var i = 0; i < PointCount; i += step)
         {
             var label = i < XAxisLabels.Count ? XAxisLabels[i] : i.ToString();
             yield return (ScaleX(i), label);
         }
+    }
+
+    private int GetLabelStep()
+    {
+        if (PointCount <= 1) return 1;
+
+        if (MaxXAxisLabels.HasValue && MaxXAxisLabels.Value > 0)
+            return Math.Max(1, (int)Math.Ceiling((double)PointCount / MaxXAxisLabels.Value));
+
+        var avgLabelWidth = XAxisLabels.Count > 0
+            ? XAxisLabels.Average(l => l.Length) * 7 + 12
+            : 30;
+        var slotWidth = (double)ChartAreaWidth / (PointCount - 1);
+        if (slotWidth >= avgLabelWidth) return 1;
+
+        return (int)Math.Ceiling(avgLabelWidth / slotWidth);
     }
 
     private void OnPointMouseOver(int seriesIndex, int pointIndex)

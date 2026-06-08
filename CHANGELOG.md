@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Displays "Label: Value (Pct%)" format
   - Automatically adjusts chart radius to fit labels
   - Hover tooltip suppressed when labels are visible
+- **X-axis label auto-thinning** — prevents label crowding on dense data sets
+  - Automatically calculates how many labels fit without overlapping based on label length and chart width
+  - Optional `MaxXAxisLabels` parameter to manually cap the number of visible labels
+  - Applies to both LineChart and BarChart (vertical and horizontal orientations)
+  - Shows evenly spaced labels (every Nth) to maintain readability
 - **Responsive auto-sizing** — `Responsive` parameter on all chart components
   - Sets SVG `width="100%"` with `viewBox` and `preserveAspectRatio="xMidYMid meet"`
   - Charts scale fluidly to fill their container while maintaining aspect ratio
