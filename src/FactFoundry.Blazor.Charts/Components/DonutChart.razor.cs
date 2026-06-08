@@ -11,6 +11,7 @@ public partial class DonutChart : ComponentBase
     [Parameter] public int MaxSegments { get; set; } = 0;
     [Parameter] public bool ShowLegend { get; set; } = true;
     [Parameter] public bool ShowLegendValues { get; set; }
+    [Parameter] public bool ShowLegendPercent { get; set; }
     [Parameter] public bool ShowLabels { get; set; }
     [Parameter] public bool ShowLabelName { get; set; } = true;
     [Parameter] public bool ShowLabelValue { get; set; } = true;
@@ -25,7 +26,7 @@ public partial class DonutChart : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
-    private int LegendWidth => ShowLegendValues ? 210 : 140;
+    private int LegendWidth => (ShowLegendValues || ShowLegendPercent) ? 210 : 140;
     private const int LabelMargin = 60;
     private const double MinLabelSpacing = 14;
 
@@ -217,8 +218,11 @@ public partial class DonutChart : ComponentBase
     private string GetLegendText(int index)
     {
         var segment = EffectiveData[index];
-        if (!ShowLegendValues) return segment.Label;
-        return $"{segment.Label}: {segment.Value:N0} ({GetPercentage(index)})";
+        if (ShowLegendValues)
+            return $"{segment.Label}: {segment.Value:N0} ({GetPercentage(index)})";
+        if (ShowLegendPercent)
+            return $"{segment.Label} — {GetPercentage(index)}";
+        return segment.Label;
     }
 
     private void OnSegmentMouseOver(int index) => _hoveredIndex = index;

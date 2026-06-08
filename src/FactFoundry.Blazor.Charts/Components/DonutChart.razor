@@ -47,18 +47,7 @@
         @((MarkupString)$"<text x=\"{CenterX.ToString("F1")}\" y=\"{(CenterY + 12).ToString("F1")}\" text-anchor=\"middle\" font-size=\"16\" font-weight=\"bold\" fill=\"{ResolvedTheme.TextColor}\">{Total.ToString("N0")}</text>")
     }
 
-    @* Hover tooltip (only when labels are off) *@
-    @if (!ShowLabels && _hoveredIndex is not null)
-    {
-        var segment = EffectiveData[_hoveredIndex.Value];
-        var midAngleRad = GetMidAngle(_hoveredIndex.Value) * Math.PI / 180;
-        var tooltipX = CenterX + (OuterRadius + 20) * Math.Cos(midAngleRad);
-        var tooltipY = CenterY + (OuterRadius + 20) * Math.Sin(midAngleRad);
-        var anchor = Math.Cos(midAngleRad) >= 0 ? "start" : "end";
-        @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{tooltipY.ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"{ResolvedTheme.TextColor}\">{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})</text>")
-    }
-
-    @* Legend *@
+    @* Legend — drawn before the tooltip so the hover tooltip paints on top of it *@
     @if (ShowLegend)
     {
         var legendX = Width - LegendWidth + 10;
@@ -70,4 +59,31 @@
             @((MarkupString)$"<text x=\"{legendX + 14}\" y=\"{legendY}\" font-size=\"10\" fill=\"{ResolvedTheme.TextColor}\">{GetLegendText(i)}</text>")
         }
     }
+
+    @* Hover tooltip (only when labels are off) *@
+    @if (!ShowLabels && _hoveredIndex is not null)
+    {
+        var segment = EffectiveData[_hoveredIndex.Value];
+        var tipText = $"{segment.Label}: {segment.Value:N0} ({GetPercentage(_hoveredIndex.Value)})";
+        var midAngleRad = GetMidAngle(_hoveredIndex.Value) * Math.PI / 180;
+        var tooltipX = CenterX + (OuterRadius + 20) * Math.Cos(midAngleRad);
+        var tooltipY = CenterY + (OuterRadius + 20) * Math.Sin(midAngleRad);
+        var anchor = Math.Cos(midAngleRad) >= 0 ? "start" : "end";
+        // The tooltip is a transient overlay, so it may use the full chart width (over the legend if
+        // needed). Compute the box bounds for the anchor, then shift the whole box to stay on-screen.
+        var estWidth = tipText.Length * 6.5;
+        var textLeft = anchor == "start" ? tooltipX : tooltipX - estWidth;
+        var boxLeft = textLeft - 6;
+        var boxRight = textLeft + estWidth + 6;
+        if (boxLeft < 4) { var d = 4 - boxLeft; tooltipX += d; boxLeft += d; }
+        else if (boxRight > Width - 4) { var d = boxRight - (Width - 4); tooltipX -= d; boxLeft -= d; }
+        tooltipY = Math.Clamp(tooltipY, 18.0, Height - 6.0);
+        <g style="pointer-events: none;">
+            <rect x="@boxLeft.ToString("F1")" y="@((tooltipY - 13).ToString("F1"))"
+                  width="@((estWidth + 12).ToString("F1"))" height="18" rx="4"
+                  fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2")" />
+            @((MarkupString)$"<text x=\"{tooltipX.ToString("F1")}\" y=\"{(tooltipY + 1).ToString("F1")}\" text-anchor=\"{anchor}\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\">{tipText}</text>")
+        </g>
+    }
+
 </svg>
