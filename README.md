@@ -223,6 +223,9 @@ samples/Charts.Sample.Wasm/        # Blazor WebAssembly demo app
 tests/FactFoundry.Blazor.Charts.Tests/  # Unit tests (xUnit + bUnit)
 docs/design/                       # Design documentation
 tools/                             # Build/maintenance scripts
+  convert_geojson.py               # Python script to regenerate WorldGeometry.cs
+                                   #   from Natural Earth GeoJSON data (not a
+                                   #   runtime dependency — code-gen only)
 ```
 
 ## Contributing
