@@ -1,0 +1,84 @@
+@page "/donut-chart"
+
+<h2>Donut Chart</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showLegend" /> Show Legend</label>
+    @if (showLegend)
+    {
+        <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLegendValues" /> Legend Values</label>
+    }
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLabels" /> Show Labels</label>
+    @if (showLabels)
+    {
+        <span style="margin-left: 0.5rem; padding-left: 0.5rem; border-left: 1px solid #ccc;">
+            <label><input type="checkbox" @bind="showLabelName" /> Name</label>
+            <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLabelValue" /> Value</label>
+            <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLabelPercent" /> Percent</label>
+        </span>
+    }
+    <label style="margin-left: 1rem;">
+        Max Segments:
+        <select @bind="maxSegments" style="margin-left: 0.25rem;">
+            <option value="0">All</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+        </select>
+    </label>
+</div>
+
+<h3>Browser Distribution</h3>
+<DonutChart Title="Sessions by Browser"
+            Data="@browserData"
+            MaxSegments="maxSegments"
+            ShowLegend="showLegend"
+            ShowLegendValues="showLegendValues"
+            ShowLabels="showLabels"
+            ShowLabelName="showLabelName"
+            ShowLabelValue="showLabelValue"
+            ShowLabelPercent="showLabelPercent"
+            CenterLabel="Total"
+            Width="700"
+            Height="400" />
+
+<h3 style="margin-top: 2rem;">Few Segments</h3>
+<DonutChart Title="Device Type"
+            Data="@deviceData"
+            ShowLegend="showLegend"
+            ShowLegendValues="showLegendValues"
+            ShowLabels="showLabels"
+            ShowLabelName="showLabelName"
+            ShowLabelValue="showLabelValue"
+            ShowLabelPercent="showLabelPercent"
+            CenterLabel="Devices"
+            InnerRadiusPercent="50"
+            Width="700"
+            Height="350" />
+
+@code {
+    private bool showLegend = true;
+    private bool showLegendValues;
+    private bool showLabels;
+    private bool showLabelName = true;
+    private bool showLabelValue = true;
+    private bool showLabelPercent = true;
+    private int maxSegments;
+
+    private List<ChartSegment> browserData =
+    [
+        new() { Label = "Chrome", Value = 4521 },
+        new() { Label = "Safari", Value = 1832 },
+        new() { Label = "Firefox", Value = 987 },
+        new() { Label = "Edge", Value = 654 },
+        new() { Label = "Opera", Value = 234 },
+        new() { Label = "Samsung Internet", Value = 178 },
+        new() { Label = "Brave", Value = 89 }
+    ];
+
+    private List<ChartSegment> deviceData =
+    [
+        new() { Label = "Desktop", Value = 5200 },
+        new() { Label = "Mobile", Value = 2800 },
+        new() { Label = "Tablet", Value = 450 }
+    ];
+}

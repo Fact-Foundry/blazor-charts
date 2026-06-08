@@ -1,0 +1,60 @@
+@page "/line-chart"
+@rendermode InteractiveServer
+
+<h2>Line Chart</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showGrid" /> Show Grid</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="smoothLines" /> Smooth Lines</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showArea" /> Show Area</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLegend" /> Show Legend</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="crosshairTooltip" /> Crosshair Tooltip</label>
+</div>
+
+<h3>Multi-Series</h3>
+<LineChart Title="Sessions Over Time"
+           Series="@multiSeries"
+           XAxisLabels="@dateLabels"
+           ShowGrid="showGrid"
+           SmoothLines="smoothLines"
+           ShowArea="showArea"
+           ShowLegend="showLegend"
+           CrosshairTooltip="crosshairTooltip"
+           Width="700"
+           Height="350" />
+
+<h3 style="margin-top: 2rem;">Single Series</h3>
+<LineChart Title="Page Views"
+           Series="@singleSeries"
+           XAxisLabels="@dateLabels"
+           ShowGrid="showGrid"
+           SmoothLines="smoothLines"
+           ShowLegend="false"
+           CrosshairTooltip="crosshairTooltip"
+           Width="700"
+           Height="250" />
+
+@code {
+    private bool showGrid = true;
+    private bool smoothLines;
+    private bool showArea;
+    private bool showLegend = true;
+    private bool crosshairTooltip;
+
+    private List<string> dateLabels =
+    [
+        "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    ];
+
+    private List<ChartSeries> multiSeries =
+    [
+        new() { Label = "Chrome", Color = "#3B82F6", Values = [120, 135, 142, 128, 155, 98, 110] },
+        new() { Label = "Firefox", Color = "#F59E0B", Values = [80, 75, 82, 90, 85, 62, 70] },
+        new() { Label = "Safari", Color = "#10B981", Values = [45, 52, 48, 55, 60, 42, 38] }
+    ];
+
+    private List<ChartSeries> singleSeries =
+    [
+        new() { Label = "Page Views", Values = [1200, 1350, 1420, 1280, 1550, 980, 1100] }
+    ];
+}

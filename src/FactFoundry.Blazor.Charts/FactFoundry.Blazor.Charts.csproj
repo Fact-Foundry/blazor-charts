@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>FactFoundry.Blazor.Charts</PackageId>
+    <Authors>Kevin Williams</Authors>
+    <Company>FactFoundry</Company>
+    <Description>A zero-dependency, pure .NET charting library for Blazor. Renders Line, Donut, and Pie charts as SVG via Razor components — no JavaScript, no interop, no external dependencies.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Fact-Foundry/blazor-charts</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Fact-Foundry/blazor-charts</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>blazor;charts;svg;line-chart;donut-chart;pie-chart;no-javascript;razor-components</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="$(MajorVersion).*" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <MajorVersion Condition="'$(TargetFramework)' == 'net8.0'">8</MajorVersion>
+    <MajorVersion Condition="'$(TargetFramework)' == 'net9.0'">9</MajorVersion>
+    <MajorVersion Condition="'$(TargetFramework)' == 'net10.0'">10</MajorVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,14 @@
+@inherits LayoutComponentBase
+
+<div class="@(_isDark ? "dark-theme" : "")" style="display: flex; min-height: 100vh;">
+    <NavMenu IsDark="_isDark" OnToggleTheme="ToggleTheme" />
+    <main style="flex: 1; padding: 1.5rem; background: var(--bg); color: var(--text);">
+        @Body
+    </main>
+</div>
+
+@code {
+    private bool _isDark;
+
+    private void ToggleTheme() => _isDark = !_isDark;
+}

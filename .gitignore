@@ -1,0 +1,23 @@
+## .NET
+bin/
+obj/
+nupkg/
+nuget-output/
+
+## IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+## Build
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+## Prompts
+prompts/
+
+## OS
+.DS_Store
+Thumbs.db

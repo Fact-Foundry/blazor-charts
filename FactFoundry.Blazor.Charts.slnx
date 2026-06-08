@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FactFoundry.Blazor.Charts/FactFoundry.Blazor.Charts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FactFoundry.Blazor.Charts.Tests/FactFoundry.Blazor.Charts.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Charts.Sample.Wasm/Charts.Sample.Wasm.csproj" />
+    <Project Path="samples/Charts.Sample.Server/Charts.Sample.Server.csproj" />
+  </Folder>
+</Solution>

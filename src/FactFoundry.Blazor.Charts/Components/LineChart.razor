@@ -1,0 +1,165 @@
+@namespace FactFoundry.Blazor.Charts.Components
+
+<svg width="@Width" height="@Height" xmlns="http://www.w3.org/2000/svg" role="img">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <title>@Title</title>
+        @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"currentColor\">{Title}</text>")
+    }
+
+    @* Grid lines *@
+    @if (ShowGrid && Series.Count > 0)
+    {
+        @foreach (var tick in GetYAxisTicks())
+        {
+            <line x1="@PaddingLeft" y1="@tick.Position.ToString("F1")"
+                  x2="@(Width - PaddingRight)" y2="@tick.Position.ToString("F1")"
+                  stroke="currentColor" stroke-opacity="0.1" stroke-dasharray="4,4" />
+        }
+    }
+
+    @* Y-axis labels *@
+    @if (Series.Count > 0)
+    {
+        @foreach (var tick in GetYAxisTicks())
+        {
+            @((MarkupString)$"<text x=\"{PaddingLeft - 8}\" y=\"{(tick.Position + 4).ToString("F1")}\" text-anchor=\"end\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">{tick.Label}</text>")
+        }
+    }
+
+    @* X-axis labels *@
+    @if (Series.Count > 0)
+    {
+        var baseY = PaddingTop + ChartAreaHeight + 20;
+        @foreach (var tick in GetXAxisTicks())
+        {
+            @((MarkupString)$"<text x=\"{tick.Position.ToString("F1")}\" y=\"{baseY}\" text-anchor=\"middle\" font-size=\"10\" fill=\"currentColor\" opacity=\"0.7\">{tick.Label}</text>")
+        }
+    }
+
+    @* Area fills *@
+    @if (ShowArea)
+    {
+        @for (var i = 0; i < Series.Count; i++)
+        {
+            var color = GetSeriesColor(i);
+            <path d="@BuildAreaPath(Series[i])" fill="@color" fill-opacity="0.1" />
+        }
+    }
+
+    @* Line paths *@
+    @for (var i = 0; i < Series.Count; i++)
+    {
+        var color = GetSeriesColor(i);
+        <path d="@BuildLinePath(Series[i])" fill="none" stroke="@color"
+              stroke-width="@StrokeWidth" stroke-linecap="round" stroke-linejoin="round" />
+    }
+
+    @* Data points *@
+    @for (var seriesIdx = 0; seriesIdx < Series.Count; seriesIdx++)
+    {
+        var sIdx = seriesIdx;
+        var color = GetSeriesColor(seriesIdx);
+        @for (var pointIdx = 0; pointIdx < Series[seriesIdx].Values.Count; pointIdx++)
+        {
+            var pIdx = pointIdx;
+            var cx = ScaleX(pointIdx);
+            var cy = ScaleY(Series[seriesIdx].Values[pointIdx]);
+            var isHovered = IsPointHovered(seriesIdx, pointIdx);
+
+            @if (CrosshairTooltip)
+            {
+                <circle cx="@cx.ToString("F1")" cy="@cy.ToString("F1")"
+                        r="@(isHovered ? 5 : 3)" fill="@color" />
+            }
+            else
+            {
+                <circle cx="@cx.ToString("F1")" cy="@cy.ToString("F1")"
+                        r="@(isHovered ? 5 : 3)" fill="@color"
+                        @onmouseover="() => OnPointMouseOver(sIdx, pIdx)"
+                        @onmouseout="OnPointMouseOut"
+                        style="cursor: pointer;" />
+            }
+        }
+    }
+
+    @* Crosshair hover zones *@
+    @if (CrosshairTooltip && PointCount > 0)
+    {
+        var step = PointCount > 1 ? (double)ChartAreaWidth / (PointCount - 1) : (double)ChartAreaWidth;
+        @for (var i = 0; i < PointCount; i++)
+        {
+            var idx = i;
+            var cx = ScaleX(i);
+            var colLeft = i == 0 ? PaddingLeft : cx - step / 2;
+            var colRight = i == PointCount - 1 ? PaddingLeft + ChartAreaWidth : cx + step / 2;
+            <rect x="@colLeft.ToString("F1")" y="@PaddingTop"
+                  width="@((colRight - colLeft).ToString("F1"))" height="@ChartAreaHeight"
+                  fill="transparent"
+                  @onmouseover="() => OnColumnMouseOver(idx)"
+                  @onmouseout="OnColumnMouseOut"
+                  style="cursor: crosshair;" />
+        }
+    }
+
+    @* Single-point tooltip *@
+    @if (!CrosshairTooltip && _hoveredSeriesIndex is not null && _hoveredPointIndex is not null)
+    {
+        var tx = ScaleX(_hoveredPointIndex.Value);
+        var ty = ScaleY(Series[_hoveredSeriesIndex.Value].Values[_hoveredPointIndex.Value]) - 12;
+        <g>
+            <rect x="@((tx - 60).ToString("F1"))" y="@((ty - 14).ToString("F1"))"
+                  width="120" height="20" rx="4" fill="black" fill-opacity="0.8" />
+            @((MarkupString)$"<text x=\"{tx.ToString("F1")}\" y=\"{(ty - 1).ToString("F1")}\" text-anchor=\"middle\" font-size=\"11\" fill=\"white\">{GetTooltipText()}</text>")
+        </g>
+    }
+
+    @* Crosshair tooltip *@
+    @if (CrosshairTooltip && _hoveredColumnIndex is not null)
+    {
+        var cx = ScaleX(_hoveredColumnIndex.Value);
+        var xLabel = _hoveredColumnIndex.Value < XAxisLabels.Count
+            ? XAxisLabels[_hoveredColumnIndex.Value]
+            : _hoveredColumnIndex.Value.ToString();
+        var tipPos = GetCrosshairTooltipLayout();
+
+        @* Vertical crosshair line *@
+        <line x1="@cx.ToString("F1")" y1="@PaddingTop"
+              x2="@cx.ToString("F1")" y2="@(PaddingTop + ChartAreaHeight)"
+              stroke="currentColor" stroke-opacity="0.25" stroke-dasharray="4,4" />
+
+        @* Tooltip box *@
+        <rect x="@tipPos.X.ToString("F1")" y="@tipPos.Y.ToString("F1")"
+              width="@tipPos.BoxWidth.ToString("F1")" height="@tipPos.BoxHeight.ToString("F1")"
+              rx="4" fill="black" fill-opacity="0.88" />
+
+        @* Header *@
+        @((MarkupString)$"<text x=\"{(tipPos.X + 10).ToString("F1")}\" y=\"{(tipPos.Y + 17).ToString("F1")}\" font-size=\"11\" font-weight=\"bold\" fill=\"white\">{xLabel}</text>")
+
+        @* Series rows *@
+        @for (var i = 0; i < Series.Count; i++)
+        {
+            var rowY = tipPos.Y + 30 + i * 18;
+            var color = GetSeriesColor(i);
+            var val = _hoveredColumnIndex.Value < Series[i].Values.Count
+                ? Series[i].Values[_hoveredColumnIndex.Value].ToString("N0")
+                : "—";
+            <circle cx="@((tipPos.X + 14).ToString("F1"))" cy="@((rowY + 3).ToString("F1"))" r="4" fill="@color" />
+            @((MarkupString)$"<text x=\"{(tipPos.X + 24).ToString("F1")}\" y=\"{(rowY + 7).ToString("F1")}\" font-size=\"10\" fill=\"white\">{Series[i].Label}: {val}</text>")
+        }
+    }
+
+    @* Legend *@
+    @if (ShowLegend && Series.Count > 0)
+    {
+        var legendY = Height - 15;
+        var legendStartX = PaddingLeft;
+        @for (var i = 0; i < Series.Count; i++)
+        {
+            var offsetX = legendStartX + i * 120;
+            var color = GetSeriesColor(i);
+            <rect x="@offsetX" y="@(legendY - 8)" width="12" height="12" rx="2" fill="@color" />
+            @((MarkupString)$"<text x=\"{offsetX + 16}\" y=\"{legendY}\" font-size=\"11\" fill=\"currentColor\">{Series[i].Label}</text>")
+        }
+    }
+</svg>

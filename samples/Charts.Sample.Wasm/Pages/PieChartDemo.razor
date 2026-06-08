@@ -1,0 +1,80 @@
+@page "/pie-chart"
+
+<h2>Pie Chart</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showLegend" /> Show Legend</label>
+    @if (showLegend)
+    {
+        <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLegendValues" /> Legend Values</label>
+    }
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLabels" /> Show Labels</label>
+    @if (showLabels)
+    {
+        <span style="margin-left: 0.5rem; padding-left: 0.5rem; border-left: 1px solid #ccc;">
+            <label><input type="checkbox" @bind="showLabelName" /> Name</label>
+            <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLabelValue" /> Value</label>
+            <label style="margin-left: 0.5rem;"><input type="checkbox" @bind="showLabelPercent" /> Percent</label>
+        </span>
+    }
+    <label style="margin-left: 1rem;">
+        Max Segments:
+        <select @bind="maxSegments" style="margin-left: 0.25rem;">
+            <option value="0">All</option>
+            <option value="4">4</option>
+        </select>
+    </label>
+</div>
+
+<h3>Operating System Distribution</h3>
+<PieChart Title="Sessions by OS"
+          Data="@osData"
+          MaxSegments="maxSegments"
+          ShowLegend="showLegend"
+          ShowLegendValues="showLegendValues"
+          ShowLabels="showLabels"
+          ShowLabelName="showLabelName"
+          ShowLabelValue="showLabelValue"
+          ShowLabelPercent="showLabelPercent"
+          Width="700"
+          Height="400" />
+
+<h3 style="margin-top: 2rem;">Traffic Source</h3>
+<PieChart Title="Traffic Sources"
+          Data="@trafficData"
+          ShowLegend="showLegend"
+          ShowLegendValues="showLegendValues"
+          ShowLabels="showLabels"
+          ShowLabelName="showLabelName"
+          ShowLabelValue="showLabelValue"
+          ShowLabelPercent="showLabelPercent"
+          Width="700"
+          Height="350" />
+
+@code {
+    private bool showLegend = true;
+    private bool showLegendValues;
+    private bool showLabels;
+    private bool showLabelName = true;
+    private bool showLabelValue = true;
+    private bool showLabelPercent = true;
+    private int maxSegments;
+
+    private List<ChartSegment> osData =
+    [
+        new() { Label = "Windows", Value = 3200 },
+        new() { Label = "macOS", Value = 2100 },
+        new() { Label = "Linux", Value = 850 },
+        new() { Label = "iOS", Value = 1400 },
+        new() { Label = "Android", Value = 1800 },
+        new() { Label = "ChromeOS", Value = 120 }
+    ];
+
+    private List<ChartSegment> trafficData =
+    [
+        new() { Label = "Organic Search", Value = 4200 },
+        new() { Label = "Direct", Value = 2100 },
+        new() { Label = "Social", Value = 1500 },
+        new() { Label = "Referral", Value = 800 }
+    ];
+}
