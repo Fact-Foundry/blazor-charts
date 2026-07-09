@@ -1,0 +1,67 @@
+@page "/bar-list"
+@rendermode InteractiveServer
+
+<h2>Bar List</h2>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showShare" /> Show Share %</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showMore" /> Show "View all" Link</label>
+    <label style="margin-left: 1rem;">
+        Max Items:
+        <select @bind="maxItems" style="margin-left: 0.25rem;">
+            <option value="3">3</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+        </select>
+    </label>
+</div>
+
+<div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+    <div style="width: 340px;">
+        <h3>Top Pages</h3>
+        <BarList Title="Top pages"
+                 Caption="by page views"
+                 Data="@pageData"
+                 MaxItems="maxItems"
+                 ShowShare="showShare"
+                 ValueFormat="N0"
+                 MoreText="@(showMore ? "View all pages" : null)"
+                 MoreHref="@(showMore ? "/analytics/pages" : null)" />
+    </div>
+
+    <div style="width: 340px;">
+        <h3>Traffic Type</h3>
+        <BarList Title="Requests"
+                 Caption="last 24 hours"
+                 Data="@trafficData"
+                 MaxItems="maxItems"
+                 ShowShare="showShare"
+                 ShowDot="true"
+                 ValueFormat="N0" />
+    </div>
+</div>
+
+@code {
+    private bool showShare = true;
+    private bool showMore = true;
+    private int maxItems = 7;
+
+    private List<ChartSegment> pageData =
+    [
+        new() { Label = "/", Value = 8421 },
+        new() { Label = "/docs/api", Value = 6510 },
+        new() { Label = "/download", Value = 5987 },
+        new() { Label = "/changelog", Value = 4200 },
+        new() { Label = "/features", Value = 3140 },
+        new() { Label = "/pricing", Value = 2050 },
+        new() { Label = "/blog", Value = 1780 },
+        new() { Label = "/contact", Value = 640 }
+    ];
+
+    private List<ChartSegment> trafficData =
+    [
+        new() { Label = "Human", Value = 48210, Color = "#22c55e" },
+        new() { Label = "Bot", Value = 12030, Color = "#f59e0b" },
+        new() { Label = "Security event", Value = 3120, Color = "#ef4444" }
+    ];
+}

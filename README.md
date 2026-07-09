@@ -9,6 +9,7 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Donut Chart** — configurable inner radius, "Top N + Other" grouping, center label, leader line labels
 - **Pie Chart** — proportional segments with leader line labels
 - **World Map Chart** — choropleth heatmap with 174 countries, multi-stop color scales
+- **Bar List** — ranked "top N" breakdown with a bar filling behind each row, share %, status dots
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
 All charts include legends, hover tooltips, and accessible SVG output. Works in both Blazor Server and Blazor WebAssembly.
@@ -130,6 +131,34 @@ Multi-stop color scales are supported:
 
 ```razor
 <WorldMapChart ColorScale="@(new[] { "#fef08a", "#f97316", "#dc2626" })" ... />
+```
+
+### Bar List
+
+A ranked "top N" breakdown — a bar fills behind each row, proportional to its value.
+Use it for categorical breakdowns (top pages, browsers, countries) where a donut wastes
+space. See [Building an analytics dashboard](docs/analytics-dashboard-patterns.md) for
+the full pattern (KPI tiles, area-trend hero, and bar lists together).
+
+```razor
+<BarList Title="Top pages"
+         Caption="by page views"
+         Data="@pages"
+         MaxItems="7"
+         ShowShare="true"
+         MoreText="View all pages"
+         MoreHref="/analytics/pages" />
+
+@code {
+    private List<ChartSegment> pages =
+    [
+        new() { Label = "/", Value = 8 },
+        new() { Label = "/docs/api", Value = 7 },
+        new() { Label = "/download", Value = 6 },
+        new() { Label = "/changelog", Value = 6 },
+        new() { Label = "/features", Value = 5 }
+    ];
+}
 ```
 
 ## Theming

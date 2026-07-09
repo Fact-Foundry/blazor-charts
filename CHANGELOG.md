@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **BarList component** — a ranked "top N" breakdown list; a bar fills behind each row proportional to its value. Supports share percentages (`ShowShare`), colored status dots (`ShowDot`), a trailing "view all →" link, and full theming. The scannable dashboard idiom for categorical breakdowns (top pages, browsers, countries) where a donut wastes space.
+- **docs/analytics-dashboard-patterns.md** — guide to assembling a GA4/Cloudflare-style analytics overview (KPI sparkline tiles, area-trend hero, bar-list breakdowns) from the library.
+
 ## [1.0.1] - 2026-06-08
 
 ### Fixed

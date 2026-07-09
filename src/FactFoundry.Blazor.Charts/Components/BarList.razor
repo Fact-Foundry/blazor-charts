@@ -1,0 +1,69 @@
+@namespace FactFoundry.Blazor.Charts.Components
+
+@{
+    var text = ResolvedTheme.TextColor;
+    var muted = $"opacity:{ResolvedTheme.LabelOpacity.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+}
+
+<div class="ff-barlist" style="color:@text;font-variant-numeric:tabular-nums;">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="ff-barlist-head">
+            <span class="ff-barlist-title">@Title</span>
+            @if (!string.IsNullOrEmpty(Caption))
+            {
+                <span class="ff-barlist-cap" style="@muted">@Caption</span>
+            }
+        </div>
+    }
+
+    <div class="ff-barlist-rows">
+        @foreach (var row in Rows())
+        {
+            <div class="ff-barlist-row">
+                <span class="ff-barlist-fill"
+                      style="width:@Pct(row.WidthPercent)%;background:@Accent;opacity:@BarOpacity.ToString(System.Globalization.CultureInfo.InvariantCulture);"></span>
+                <span class="ff-barlist-k">
+                    @if (row.Dot is not null)
+                    {
+                        <span class="ff-barlist-dot" style="background:@row.Dot"></span>
+                    }
+                    @row.Label
+                </span>
+                <span class="ff-barlist-n" style="@muted">@row.ValueText</span>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(MoreText) && !string.IsNullOrEmpty(MoreHref))
+    {
+        <a class="ff-barlist-more" href="@MoreHref" style="color:@Accent">@MoreText <span aria-hidden="true">→</span></a>
+    }
+</div>
+
+<style>
+    .ff-barlist { display: flex; flex-direction: column; }
+    .ff-barlist-head { margin-bottom: 6px; }
+    .ff-barlist-title { font-weight: 620; font-size: .95rem; letter-spacing: -.01em; }
+    .ff-barlist-cap { display: block; font-size: .76rem; margin-top: 2px; }
+    .ff-barlist-rows { display: flex; flex-direction: column; gap: 3px; }
+    .ff-barlist-row {
+        position: relative; display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; padding: 7px 10px; border-radius: 7px; overflow: hidden;
+    }
+    .ff-barlist-fill {
+        position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; z-index: 0;
+        transition: width .3s ease;
+    }
+    .ff-barlist-k {
+        position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 7px;
+        font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ff-barlist-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+    .ff-barlist-n { position: relative; z-index: 1; flex: none; font-size: .82rem; }
+    .ff-barlist-more {
+        margin-top: 12px; font-size: .78rem; font-weight: 550; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .ff-barlist-more:hover { text-decoration: underline; }
+</style>
