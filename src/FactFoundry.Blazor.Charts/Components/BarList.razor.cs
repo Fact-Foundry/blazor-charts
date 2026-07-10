@@ -51,6 +51,13 @@ public partial class BarList : ComponentBase
     /// <summary>Href for the "more" link. Required for the link to render.</summary>
     [Parameter] public string? MoreHref { get; set; }
 
+    /// <summary>
+    /// Color of the "more" link. When unset, the link inherits <see cref="AccentColor"/>
+    /// (the bar color) — set it to give the drill link its own accent, e.g. a warm action
+    /// color while the bars stay a cool data color.
+    /// </summary>
+    [Parameter] public string? LinkColor { get; set; }
+
     /// <summary>Explicit theme override. Falls back to the cascading theme, then <see cref="ChartTheme.Light"/>.</summary>
     [Parameter] public ChartTheme? Theme { get; set; }
 
@@ -59,6 +66,8 @@ public partial class BarList : ComponentBase
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
     private string Accent => AccentColor ?? ResolvedTheme.GetColor(0);
+
+    private string LinkAccent => LinkColor ?? Accent;
 
     /// <summary>A single computed row ready for rendering.</summary>
     private readonly record struct Row(string Label, string? Dot, string ValueText, double WidthPercent);

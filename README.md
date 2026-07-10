@@ -10,6 +10,7 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Pie Chart** — proportional segments with leader line labels
 - **World Map Chart** — choropleth heatmap with 174 countries, multi-stop color scales
 - **Bar List** — ranked "top N" breakdown with a bar filling behind each row, share %, status dots
+- **Sparkline** — bare inline trend (no axes) for KPI tiles; legible down to ~80×30
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
 All charts include legends, hover tooltips, and accessible SVG output. Works in both Blazor Server and Blazor WebAssembly.
