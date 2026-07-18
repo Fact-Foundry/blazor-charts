@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-07-17
+
+### Added
+
+- **CommitGraph component** — a git-style branch/commit lane view (the idiom of VS Code's Git Graph, GitKraken, gitk), rendered as pure Razor-to-SVG and themed through `ChartThemeProvider`. Takes any DAG of `CommitNode` (id/parents/refs plus message/author/date) already in display order — the shape a LibGit2Sharp walk yields — and runs a single lane-assignment pass: commits become color-coded lane dots, merges hollow rings, branch/merge links bezier curves between lanes. Refs render as badges (`tag:`-prefixed → tag styling, else branch); hovering a row shows a themed tooltip with author, short id and date; `OnCommitClick` reports the selected commit. Params: `Commits`, `RowHeight`, `LaneWidth`, `DotRadius`, `Width`, `ShowMessage`, `ShowRefs`, `ShowTooltip`, `ShortIdLength`, `DateFormat`, `Responsive`, `OnCommitClick`.
+- **Sparkline component** — a bare inline trend (area + line, no axes/labels/legend) for KPI tiles. Reserves no axis chrome, so it stays legible at ~80×30 where a shrunk `LineChart` collapses. Params: `Values`, `Color`, `ShowArea`, `ShowEndDot`, `StrokeWidth`, `Responsive`.
+- **`LinkColor` parameter on `BarList`** — colors the trailing "view all →" link independently of the bar fill. Unset, it inherits `AccentColor` (unchanged behavior), so the drill link can be a warm action color while the bars stay a cool data color.
+
+### Docs
+
+- Corrected `docs/analytics-dashboard-patterns.md` §1 to use `Sparkline` for KPI tiles (a shrunk `LineChart` does not work at small sizes because of its fixed axis padding).
+
 ## [1.0.2] - 2026-07-09
 
 ### Added

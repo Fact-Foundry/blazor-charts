@@ -45,7 +45,7 @@
     private bool showMore = true;
     private int maxItems = 7;
 
-    private List<ChartSegment> pageData =
+    private readonly List<ChartSegment> pageData =
     [
         new() { Label = "/", Value = 8421 },
         new() { Label = "/docs/api", Value = 6510 },
@@ -57,7 +57,7 @@
         new() { Label = "/contact", Value = 640 }
     ];
 
-    private List<ChartSegment> trafficData =
+    private readonly List<ChartSegment> trafficData =
     [
         new() { Label = "Human", Value = 48210, Color = "#22c55e" },
         new() { Label = "Bot", Value = 12030, Color = "#f59e0b" },

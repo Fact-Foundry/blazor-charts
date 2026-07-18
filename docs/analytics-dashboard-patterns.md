@@ -21,9 +21,10 @@ cascading `ChartThemeProvider`.
 
 ## 1. KPI tile with a sparkline
 
-There is no dedicated `Sparkline` component — a sparkline is just a `LineChart`
-with all its chrome turned off, sized small. Wrap it with your own tile markup for
-the label and value.
+Use the `Sparkline` component — a bare area + line with no axes, labels, grid, or
+legend. Do **not** try to shrink a `LineChart` for this: `LineChart` reserves ~50px on
+the left for axis labels, so below ~200px wide the plot collapses and the tick labels
+bleed into the tile. `Sparkline` reserves no chrome and stays legible at 80×30.
 
 ```razor
 <div class="kpi">
@@ -31,20 +32,14 @@ the label and value.
     <div class="kpi-row">
         <span class="kpi-value">44</span>
         <div class="kpi-spark">
-            <LineChart Series="@spark"
-                       Responsive="true" Width="120" Height="36"
-                       ShowLegend="false" ShowGrid="false"
-                       SmoothLines="true" ShowArea="true" StrokeWidth="2" />
+            <Sparkline Values="@spark" Color="#4f8bff" Width="82" Height="30" />
         </div>
     </div>
 </div>
 
 @code {
-    // A single series, no labels — just the shape of the last N periods.
-    private List<ChartSeries> spark =
-    [
-        new() { Color = "#4f8bff", Values = [9, 12, 10, 14, 16, 13, 22] }
-    ];
+    // Just the shape of the last N periods.
+    private List<decimal> spark = [9, 12, 10, 14, 16, 13, 22];
 }
 ```
 
@@ -58,9 +53,10 @@ the label and value.
 .kpi-spark { width: 78px; }
 ```
 
-**Knobs:** `ShowArea` gives the fill under the line; drop `StrokeWidth` to `1.5` for a
-finer line; set `Color` on the series to pin the accent (otherwise the theme palette
-decides). Keep `ShowLegend`/`ShowGrid` off — a sparkline has no axes.
+**Knobs:** `ShowArea` (default on) draws the gradient fill; `ShowEndDot` (default on)
+marks the latest point; `StrokeWidth` defaults to `1.6`; `Color` pins the accent
+(otherwise the theme's first palette color is used). It's `Responsive` by default —
+give the wrapping element a width.
 
 ---
 
@@ -182,7 +178,21 @@ the bar stays a neutral accent. Ideal for a visitor-identity or severity breakdo
 | `AccentColor` | `string?` | theme color 0 | Bar fill color. |
 | `BarOpacity` | `double` | `0.16` | Fill opacity behind rows. |
 | `MoreText` / `MoreHref` | `string?` | — | Trailing "view all →" link. |
+| `LinkColor` | `string?` | inherits `AccentColor` | Own color for the "more" link. |
 | `Theme` | `ChartTheme?` | cascaded | Text/label colors. |
+
+Give the drill link its own accent while the bars stay a cool data color — e.g. warm
+action links over cool bars:
+
+```razor
+<BarList Title="Top pages" Data="@pages"
+         AccentColor="#12DD93"           @* bars: cool data green *@
+         LinkColor="#FF6A1F"             @* link: warm action ember *@
+         MoreText="View all pages" MoreHref="/analytics/pages" />
+```
+
+> A warm color at low opacity over a dark ground reads brown, so keep **bar fills cool**
+> and spend the warm accent on the **link** (an action), not the fill.
 
 **Styling:** `BarList` ships its own scoped styles under the `ff-barlist-*` classes.
 Every color comes from the resolved theme or the parameters above — to restyle globally,

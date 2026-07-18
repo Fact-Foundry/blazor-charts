@@ -10,6 +10,8 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Pie Chart** — proportional segments with leader line labels
 - **World Map Chart** — choropleth heatmap with 174 countries, multi-stop color scales
 - **Bar List** — ranked "top N" breakdown with a bar filling behind each row, share %, status dots
+- **Sparkline** — bare inline trend (no axes) for KPI tiles; legible down to ~80×30
+- **Commit Graph** — git-style branch/commit lane view; color-coded lanes, merge curves, ref badges, hover tooltips
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
 All charts include legends, hover tooltips, and accessible SVG output. Works in both Blazor Server and Blazor WebAssembly.
@@ -160,6 +162,32 @@ the full pattern (KPI tiles, area-trend hero, and bar lists together).
     ];
 }
 ```
+
+### Commit Graph
+
+A git-style branch/commit lane view — commits as dots, branches as color-coded lanes,
+merges and branch points as curves. The component knows nothing about git; it takes any
+DAG of nodes-with-parents (`CommitNode`) already in display order (newest first), which is
+exactly what a LibGit2Sharp topological/time-sorted walk yields. Hover a row for the
+author, short id and date; wire `OnCommitClick` to select a commit.
+
+```razor
+<CommitGraph Commits="@history" OnCommitClick="c => selected = c" />
+
+@code {
+    private List<CommitNode> history =
+    [
+        new() { Id = "9f3a1c", ParentIds = ["7b2d4f", "5c8e9a"], Message = "Merge feature/x",
+                Author = "Kevin", Date = DateTimeOffset.Now, Refs = ["HEAD -> main"] },
+        new() { Id = "5c8e9a", ParentIds = ["7b2d4f"], Message = "Feature work",
+                Author = "Kevin", Refs = ["feature/x"] },
+        new() { Id = "7b2d4f", ParentIds = [], Message = "Initial commit", Refs = ["tag: v1.0.0"] }
+    ];
+}
+```
+
+A ref prefixed `tag:` (the `git log --decorate` convention) is styled as a tag; every
+other ref is styled as a branch.
 
 ## Theming
 
