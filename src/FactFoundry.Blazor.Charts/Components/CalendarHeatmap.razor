@@ -1,0 +1,106 @@
+@namespace FactFoundry.Blazor.Charts.Components
+@using System.Globalization
+
+@if (_layout.Cells.Count > 0)
+{
+    var text = ResolvedTheme.TextColor;
+    var labelOp = ResolvedTheme.LabelOpacity.ToString("F2", CultureInfo.InvariantCulture);
+    var w = TotalWidth;
+    var h = TotalHeight;
+
+    <svg class="ff-calendar-heatmap"
+         width="@(Responsive ? "100%" : w.ToString())"
+         height="@(Responsive ? null : h.ToString())"
+         viewBox="0 0 @w @h"
+         preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+         xmlns="http://www.w3.org/2000/svg" role="img"
+         style="display:block;">
+
+        @* Month labels *@
+        @if (ShowMonthLabels)
+        {
+            foreach (var (col, label) in _layout.Months)
+            {
+                @((MarkupString)$"<text x=\"{F(CellX(col))}\" y=\"12\" font-size=\"10\" fill=\"{text}\" opacity=\"{labelOp}\">{Escape(label)}</text>")
+            }
+        }
+
+        @* Weekday labels (alternating rows) *@
+        @if (ShowWeekdayLabels)
+        {
+            for (var row = 1; row < 7; row += 2)
+            {
+                var ly = CellY(row) + CellSize - 2;
+                @((MarkupString)$"<text x=\"{F(LeftPad - 6)}\" y=\"{F(ly)}\" text-anchor=\"end\" font-size=\"9\" fill=\"{text}\" opacity=\"{labelOp}\">{Escape(WeekdayLabel(row))}</text>")
+            }
+        }
+
+        @* Day cells *@
+        @foreach (var cell in _layout.Cells)
+        {
+            var c = cell;
+            var style = CellStyle(c.Value);
+            <rect class="ff-cal-cell" x="@F(CellX(c.Col))" y="@F(CellY(c.Row))" width="@CellSize" height="@CellSize"
+                  rx="@CellRadius.ToString("0.##", CultureInfo.InvariantCulture)"
+                  fill="@style.Fill" fill-opacity="@style.Opacity"
+                  style="@(OnDayClick.HasDelegate ? "cursor:pointer;" : null)"
+                  @onmouseover="() => OnCellOver(c.Date)"
+                  @onmouseout="OnCellOut"
+                  @onclick="() => OnCellClick(c)" />
+        }
+
+        @* Legend *@
+        @if (ShowLegend)
+        {
+            var lsw = 11;
+            var lgap = 3;
+            var count = Levels + 1;
+            var swatchesW = count * lsw + (count - 1) * lgap;
+            var lessW = TextWidth("Less");
+            var moreW = TextWidth("More");
+            var totalW = lessW + 6 + swatchesW + 6 + moreW;
+            var startX = Math.Max(LeftPad, LeftPad + GridWidth - totalW);
+            var ly = TopPad + GridHeight + 6;
+            var baseline = ly + lsw - 2;
+
+            @((MarkupString)$"<text x=\"{F(startX)}\" y=\"{F(baseline)}\" font-size=\"9\" fill=\"{text}\" opacity=\"{labelOp}\">Less</text>")
+
+            var sx = startX + lessW + 6;
+            for (var level = 0; level <= Levels; level++)
+            {
+                var s = LevelStyle(level);
+                <rect x="@F(sx)" y="@F(ly)" width="@lsw" height="@lsw" rx="2"
+                      fill="@s.Fill" fill-opacity="@s.Opacity" />
+                sx += lsw + lgap;
+            }
+
+            @((MarkupString)$"<text x=\"{F(sx + 2)}\" y=\"{F(baseline)}\" font-size=\"9\" fill=\"{text}\" opacity=\"{labelOp}\">More</text>")
+        }
+
+        @* Tooltip *@
+        @if (ShowTooltip && _hovered is DateOnly hd)
+        {
+            var offset = hd.DayNumber - _layout.Start.DayNumber;
+            var col = offset / 7;
+            var rowY = CellY(offset % 7);
+            var value = _layout.Values.GetValueOrDefault(hd);
+
+            var dateStr = FormatDate(hd);
+            var valStr = FormatValue(value);
+            var boxW = Math.Max(TextWidth(dateStr), TextWidth(valStr)) + 16;
+            var boxH = 34.0;
+
+            var cx = CellX(col) + CellSize / 2.0;
+            var boxX = Math.Max(2, Math.Min(cx - boxW / 2, w - boxW - 2));
+            var above = rowY - boxH - 6;
+            var boxY = above >= 2 ? above : rowY + CellSize + 6;
+
+            <g style="pointer-events:none;">
+                <rect x="@F(boxX)" y="@F(boxY)" width="@F(boxW)" height="@F(boxH)" rx="5"
+                      fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
+                @((MarkupString)$"<text x=\"{F(boxX + 8)}\" y=\"{F(boxY + 15)}\" font-size=\"11\" font-weight=\"600\" fill=\"{ResolvedTheme.TooltipTextColor}\">{Escape(dateStr)}</text>")
+                @((MarkupString)$"<text x=\"{F(boxX + 8)}\" y=\"{F(boxY + 28)}\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"0.85\">{Escape(valStr)}</text>")
+            </g>
+        }
+    </svg>
+}
