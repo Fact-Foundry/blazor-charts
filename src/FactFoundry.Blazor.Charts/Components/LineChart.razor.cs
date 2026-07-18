@@ -24,6 +24,23 @@ public partial class LineChart : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private string AccessibleName => string.IsNullOrEmpty(Title) ? "Line chart" : Title!;
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (Series.Count == 0) return "Line chart with no data.";
+        var names = string.Join(", ", Series.Select(s => s.Label));
+        var span = XAxisLabels.Count > 0 ? $" spanning {XAxisLabels[0]} to {XAxisLabels[^1]}" : "";
+        return $"Line chart with {Series.Count} series ({names}) across {PointCount} points{span}.";
+    }
+
     private const int PaddingLeft = 50;
     private const int PaddingRight = 20;
     private const int PaddingTop = 40;

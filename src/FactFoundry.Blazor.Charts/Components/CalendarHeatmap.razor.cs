@@ -75,6 +75,24 @@ public partial class CalendarHeatmap : ComponentBase
 
     private string BaseColor => Color ?? ResolvedTheme.GetColor(1);
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private const string AccessibleName = "Calendar heatmap";
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (_layout.Cells.Count == 0) return "Calendar heatmap with no data.";
+        var end = _layout.Cells[^1].Date;
+        var busiest = _layout.Cells.OrderByDescending(c => c.Value).First();
+        return $"Calendar heatmap from {FormatDate(_layout.Start)} to {FormatDate(end)} across {_layout.Cells.Count} days. " +
+               $"Busiest day {FormatDate(busiest.Date)} with {FormatValue(busiest.Value)}.";
+    }
+
     private DateOnly? _hovered;
 
     // ---- Layout ---------------------------------------------------------------------

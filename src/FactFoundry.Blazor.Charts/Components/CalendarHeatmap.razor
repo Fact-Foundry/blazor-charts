@@ -13,8 +13,10 @@
          height="@(Responsive ? null : h.ToString())"
          viewBox="0 0 @w @h"
          preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
-         xmlns="http://www.w3.org/2000/svg" role="img"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
          style="display:block;">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
 
         @* Month labels *@
         @if (ShowMonthLabels)

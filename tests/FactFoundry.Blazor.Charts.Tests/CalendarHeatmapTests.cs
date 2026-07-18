@@ -143,10 +143,13 @@ public class CalendarHeatmapTests : BunitContext
             .Add(x => x.Data, [new CalendarPoint { Date = new DateOnly(2026, 1, 4), Value = 7 }])
             .Add(x => x.ValueFormat, "N0"));
 
-        Assert.DoesNotContain("Jan 4, 2026", cut.Markup);
+        // The tooltip is the only <g>; it isn't present until hover (the date also
+        // appears in the always-present <desc>, so assert against the tooltip group).
+        Assert.Empty(cut.FindAll("g"));
         cut.Find(".ff-cal-cell").MouseOver();
-        Assert.Contains("Jan 4, 2026", cut.Markup);
-        Assert.Contains(">7<", cut.Markup);
+        var tip = cut.Find("g");
+        Assert.Contains("Jan 4, 2026", tip.InnerHtml);
+        Assert.Contains(">7<", tip.InnerHtml);
     }
 
     [Fact]

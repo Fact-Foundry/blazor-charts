@@ -23,6 +23,25 @@ public partial class BarChart : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private string AccessibleName => string.IsNullOrEmpty(Title) ? "Bar chart" : Title!;
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (Series.Count == 0) return "Bar chart with no data.";
+        var cats = XAxisLabels.Count > 0 ? XAxisLabels.Count : CategoryCount;
+        var kind = Stacked ? "stacked " : "";
+        var orient = Horizontal ? "horizontal " : "";
+        var names = string.Join(", ", Series.Select(s => s.Label));
+        return $"{orient}{kind}bar chart comparing {cats} categories across {Series.Count} series ({names}).";
+    }
+
     private int PaddingLeft => Horizontal ? 80 : 50;
     private const int PaddingRight = 20;
     private const int PaddingTop = 40;

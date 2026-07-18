@@ -14,8 +14,10 @@
          height="@(Responsive ? null : height.ToString())"
          viewBox="0 0 @Width @height"
          preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
-         xmlns="http://www.w3.org/2000/svg" role="img"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
          style="display:block;font-variant-numeric:tabular-nums;">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
 
         @* Hovered-row highlight, drawn under everything *@
         @if (_hoveredRow is int hr)

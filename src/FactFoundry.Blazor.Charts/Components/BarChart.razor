@@ -4,10 +4,11 @@
      height="@(Responsive ? null : $"{Height}")"
      viewBox="@(Responsive ? $"0 0 {Width} {Height}" : null)"
      preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
-     xmlns="http://www.w3.org/2000/svg" role="img">
+     xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId">
+    <title id="@TitleId">@AccessibleName</title>
+    <desc id="@DescId">@AccessibleDescription</desc>
     @if (!string.IsNullOrEmpty(Title))
     {
-        <title>@Title</title>
         @((MarkupString)$"<text x=\"{Width / 2}\" y=\"20\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"bold\" fill=\"{ResolvedTheme.TextColor}\">{Title}</text>")
     }
 

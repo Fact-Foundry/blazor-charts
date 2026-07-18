@@ -15,7 +15,7 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Calendar Heatmap** — GitHub-contributions-style day grid; intensity buckets, month/weekday labels, legend, hover tooltips
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
-All charts include legends, hover tooltips, and accessible SVG output. Works in both Blazor Server and Blazor WebAssembly.
+All charts include legends, hover tooltips, and accessible SVG output — `role="img"` with a `<title>` name and a data-aware `<desc>` description (override via the `Description` parameter). Works in both Blazor Server and Blazor WebAssembly.
 
 ## Installation
 

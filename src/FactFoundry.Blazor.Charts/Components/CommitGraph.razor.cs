@@ -69,6 +69,20 @@ public partial class CommitGraph : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private const string AccessibleName = "Commit graph";
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription() =>
+        Commits.Count == 0
+            ? "Commit graph with no commits."
+            : $"Commit graph of {Commits.Count} commits across {_layout.LaneCount} branch lanes.";
+
     private int? _hoveredRow;
 
     // ---- Layout model ---------------------------------------------------------------

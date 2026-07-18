@@ -43,6 +43,24 @@ public partial class Sparkline : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private const string AccessibleName = "Sparkline";
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (Values.Count == 0) return "Sparkline with no data.";
+        var first = Values[0].ToString("0.##", CultureInfo.InvariantCulture);
+        var last = Values[^1].ToString("0.##", CultureInfo.InvariantCulture);
+        var dir = Values[^1] > Values[0] ? "up" : Values[^1] < Values[0] ? "down" : "flat";
+        return $"Sparkline trending {dir} from {first} to {last} across {Values.Count} points.";
+    }
+
     private string Stroke => Color ?? ResolvedTheme.GetColor(0);
 
     // A gradient id unique to this instance so multiple sparklines don't share a fill.
