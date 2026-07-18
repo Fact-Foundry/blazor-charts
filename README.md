@@ -12,9 +12,10 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Bar List** — ranked "top N" breakdown with a bar filling behind each row, share %, status dots
 - **Sparkline** — bare inline trend (no axes) for KPI tiles; legible down to ~80×30
 - **Commit Graph** — git-style branch/commit lane view; color-coded lanes, merge curves, ref badges, hover tooltips
+- **Calendar Heatmap** — GitHub-contributions-style day grid; intensity buckets, month/weekday labels, legend, hover tooltips
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
-All charts include legends, hover tooltips, and accessible SVG output. Works in both Blazor Server and Blazor WebAssembly.
+All charts include legends, hover tooltips, and accessible SVG output — `role="img"` with a `<title>` name and a data-aware `<desc>` description (override via the `Description` parameter). Works in both Blazor Server and Blazor WebAssembly.
 
 ## Installation
 
@@ -188,6 +189,28 @@ author, short id and date; wire `OnCommitClick` to select a commit.
 
 A ref prefixed `tag:` (the `git log --decorate` convention) is styled as a tag; every
 other ref is styled as a branch.
+
+### Calendar Heatmap
+
+A GitHub-contributions-style grid — one cell per day in week columns, colored by each
+day's value. Hand it a flat list of `CalendarPoint` (day + value); same-day points are
+summed, and the grid spans the data's date range (or an explicit `StartDate`/`EndDate`).
+
+```razor
+<CalendarHeatmap Data="@days" ValueFormat="N0" OnDayClick="d => selected = d" />
+
+@code {
+    private List<CalendarPoint> days =
+    [
+        new() { Date = new DateOnly(2026, 1, 4), Value = 3 },
+        new() { Date = new DateOnly(2026, 1, 5), Value = 7 },
+        new() { Date = new DateOnly(2026, 1, 6), Value = 1 }
+    ];
+}
+```
+
+Tune it with `WeekStart`, `Levels` (intensity buckets), `Color`, `CellSize`/`CellGap`, and
+the `ShowMonthLabels`/`ShowWeekdayLabels`/`ShowLegend`/`ShowTooltip` toggles.
 
 ## Theming
 

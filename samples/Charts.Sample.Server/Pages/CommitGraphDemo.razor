@@ -40,8 +40,8 @@
     // a hotfix branch, a lightweight tag, and a not-yet-shown parent at the bottom.
     private readonly List<CommitNode> history =
     [
-        new() { Id = "9f3a1c0e", ParentIds = ["7b2d4f10", "5c8e9a22"], Message = "Merge feature/commit-graph", Author = "Kevin", Date = When(0), Refs = ["HEAD -> main"] },
-        new() { Id = "5c8e9a22", ParentIds = ["3a1b2c33"], Message = "Add hover tooltip + lane colors", Author = "Kevin", Date = When(1), Refs = ["feature/commit-graph"] },
+        new() { Id = "9f3a1c0e", ParentIds = ["7b2d4f10", "5c8e9a22"], Message = "Merge feature/commit-graph", Author = "Kevin", Date = When(0), Refs = ["HEAD -> main"], FilesChanged = 8, Insertions = 412, Deletions = 27 },
+        new() { Id = "5c8e9a22", ParentIds = ["3a1b2c33"], Message = "Item Dimension Changes: - Removed the Items measure which counts the total number of items so that it is computed similar to Sales Amount where it's grouped by order_line_id to avoid duplicates. This also fixes the double-counting that appeared when an order had multiple invoice lines, and updates the related tests to cover the grouped path end to end.", Author = "Kevin", Date = When(1), Refs = ["feature/commit-graph"], FilesChanged = 2, Insertions = 4, Deletions = 4 },
         new() { Id = "7b2d4f10", ParentIds = ["6d0f1e44"], Message = "Release 1.0.3", Author = "Kevin", Date = When(2), Refs = ["tag: v1.0.3"] },
         new() { Id = "3a1b2c33", ParentIds = ["6d0f1e44"], Message = "Sketch lane-assignment pass", Author = "Ada", Date = When(3) },
         new() { Id = "6d0f1e44", ParentIds = ["4e5f6a55", "2c3d4e66"], Message = "Merge hotfix/tooltip-clip", Author = "Kevin", Date = When(4) },

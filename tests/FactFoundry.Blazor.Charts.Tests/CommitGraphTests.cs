@@ -1,3 +1,5 @@
+using System.Globalization;
+using AngleSharp.Dom;
 using Bunit;
 using FactFoundry.Blazor.Charts.Components;
 using FactFoundry.Blazor.Charts.Models;
@@ -128,6 +130,23 @@ public class CommitGraphTests : BunitContext
     }
 
     [Fact]
+    public void Head_Decoration_Splits_Into_Separate_Badges()
+    {
+        var data = new List<CommitNode>
+        {
+            new() { Id = "c", ParentIds = [], Message = "tip", Refs = ["HEAD -> main"] }
+        };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+
+        // "HEAD -> main" becomes two badges: "HEAD" and "main", with no arrow.
+        Assert.Contains(">HEAD<", cut.Markup);
+        Assert.Contains(">main<", cut.Markup);
+        Assert.DoesNotContain("->", cut.Markup);
+        Assert.DoesNotContain("HEAD -&gt; main", cut.Markup);
+    }
+
+    [Fact]
     public void Dangling_Parent_Does_Not_Throw()
     {
         // Parent "z" is outside the provided window (truncated history).
@@ -193,7 +212,165 @@ public class CommitGraphTests : BunitContext
 
         Assert.Contains("Ada Lovelace", cut.Markup);
         Assert.Contains("abcdef1", cut.Markup);      // 7-char short id
-        Assert.Contains("2026-01-02 03:04", cut.Markup);
+        Assert.Contains("Jan 2, 2026 03:04", cut.Markup);
+    }
+
+    [Fact]
+    public void Long_Message_Tooltip_Stays_Within_Max_Width()
+    {
+        // A message far wider than the graph — the reported "box swallows the panel" case.
+        var longMsg = string.Join(" ",
+            Enumerable.Repeat("Removed the Items measure grouped by order_line_id to avoid duplicates", 6));
+        var data = new List<CommitNode>
+        {
+            new()
+            {
+                Id = "abc1234def", ParentIds = [], Message = longMsg,
+                Author = "Kevin", Date = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)
+            }
+        };
+
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, data)
+            .Add(x => x.TooltipMaxWidth, 360));
+
+        cut.FindAll("rect").Last().MouseOver();
+
+        // The tooltip box is the rect inside the pointer-events:none group.
+        var box = cut.Find("g > rect");
+        var width = double.Parse(box.GetAttribute("width")!, CultureInfo.InvariantCulture);
+        Assert.True(width <= 365, $"tooltip width {width} should stay within TooltipMaxWidth (+padding)");
+
+        // The long message wrapped across several header lines rather than one giant line.
+        Assert.True(cut.FindAll("g > text").Count > 3, "long message should wrap onto multiple lines");
+    }
+
+    [Fact]
+    public void Tooltip_Never_Exceeds_A_Narrow_Chart_Width()
+    {
+        // TooltipMaxWidth (360) is wider than the chart (280) — the box must clamp to the
+        // chart, not overflow/clip. Regression for the "goes out of bounds" case.
+        const int width = 280;
+        var longMsg = string.Join(" ",
+            Enumerable.Repeat("validates every source-backed table against the live schema", 8));
+        var data = new List<CommitNode>
+        {
+            new() { Id = "a", ParentIds = [], Message = longMsg, Author = "Kevin" }
+        };
+
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, data)
+            .Add(x => x.Width, width)
+            .Add(x => x.TooltipMaxWidth, 360));
+
+        cut.FindAll("rect").Last().MouseOver();
+
+        var box = cut.Find("g > rect");
+        var x = double.Parse(box.GetAttribute("x")!, CultureInfo.InvariantCulture);
+        var w = double.Parse(box.GetAttribute("width")!, CultureInfo.InvariantCulture);
+        Assert.True(x >= 0 && x + w <= width, $"tooltip [{x}..{x + w}] must fit within chart width {width}");
+    }
+
+    [Fact]
+    public void TooltipMaxLines_Caps_Wrapped_Header_Lines()
+    {
+        var longMsg = string.Join(" ", Enumerable.Repeat("word", 200));
+        var data = new List<CommitNode> { new() { Id = "a", ParentIds = [], Message = longMsg } };
+
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, data)
+            .Add(x => x.TooltipMaxLines, 2));
+
+        cut.FindAll("rect").Last().MouseOver();
+
+        // 2 header lines + the short-id meta line = 3 text runs in the tooltip group.
+        Assert.Equal(3, cut.FindAll("g > text").Count);
+    }
+
+    [Fact]
+    public void Tooltip_Collapses_Newlines_In_Message()
+    {
+        var data = new List<CommitNode>
+        {
+            new() { Id = "a", ParentIds = [], Message = "subject line\n\nbody paragraph here", Author = "Kevin" }
+        };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+        cut.FindAll("rect").Last().MouseOver();
+
+        // No raw newline survives into the rendered SVG text runs.
+        Assert.DoesNotContain("subject line\n", cut.Markup);
+        Assert.Contains("subject line", cut.Markup);
+        Assert.Contains("body paragraph", cut.Markup);
+    }
+
+    [Fact]
+    public void Tooltip_Shows_Colored_File_Change_Stats()
+    {
+        var data = new List<CommitNode>
+        {
+            new() { Id = "a", ParentIds = [], Message = "m", FilesChanged = 2, Insertions = 4, Deletions = 3 }
+        };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+        cut.FindAll("rect").Last().MouseOver();
+
+        Assert.Contains("2 files changed", cut.Markup);
+        Assert.Contains("+4", cut.Markup);
+        Assert.Contains("-3", cut.Markup);
+        Assert.Contains("#22c55e", cut.Markup); // insertions green
+        Assert.Contains("#ef4444", cut.Markup); // deletions red
+    }
+
+    [Fact]
+    public void Commit_Id_Is_The_Last_Tooltip_Line()
+    {
+        var data = new List<CommitNode>
+        {
+            new()
+            {
+                Id = "abcdef123", ParentIds = [], Message = "m", Author = "Kevin",
+                Date = new DateTimeOffset(2026, 1, 2, 3, 4, 0, TimeSpan.Zero),
+                FilesChanged = 2, Insertions = 4, Deletions = 3
+            }
+        };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+        cut.FindAll("rect").Last().MouseOver();
+
+        var texts = cut.FindAll("g > text");
+        double Y(IElement t) => double.Parse(t.GetAttribute("y")!, CultureInfo.InvariantCulture);
+
+        var idLine = texts.Single(t => t.TextContent.Contains('·'));
+        var statsLine = texts.Single(t => t.TextContent.Contains("files changed"));
+
+        // The commit id/date line sits below the stats row, and is the bottom-most line.
+        Assert.True(Y(idLine) > Y(statsLine));
+        Assert.Equal(texts.Max(Y), Y(idLine));
+    }
+
+    [Fact]
+    public void Stats_Row_Absent_When_No_Stat_Fields_Set()
+    {
+        var data = new List<CommitNode> { new() { Id = "a", ParentIds = [], Message = "m" } };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+        cut.FindAll("rect").Last().MouseOver();
+
+        Assert.DoesNotContain("files changed", cut.Markup);
+        Assert.DoesNotContain("#22c55e", cut.Markup);
+    }
+
+    [Fact]
+    public void Stats_Row_Uses_Singular_For_One_File()
+    {
+        var data = new List<CommitNode> { new() { Id = "a", ParentIds = [], Message = "m", FilesChanged = 1 } };
+
+        var cut = Render<CommitGraph>(p => p.Add(x => x.Commits, data));
+        cut.FindAll("rect").Last().MouseOver();
+
+        Assert.Contains("1 file changed", cut.Markup);
+        Assert.DoesNotContain("1 files changed", cut.Markup);
     }
 
     [Fact]

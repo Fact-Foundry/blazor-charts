@@ -14,8 +14,10 @@
          height="@(Responsive ? null : height.ToString())"
          viewBox="0 0 @Width @height"
          preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
-         xmlns="http://www.w3.org/2000/svg" role="img"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
          style="display:block;font-variant-numeric:tabular-nums;">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
 
         @* Hovered-row highlight, drawn under everything *@
         @if (_hoveredRow is int hr)
@@ -54,9 +56,8 @@
 
             @if (ShowRefs)
             {
-                foreach (var raw in node.Commit.Refs)
+                foreach (var badge in ExpandRefs(node.Commit.Refs))
                 {
-                    var badge = ParseRef(raw);
                     var color = badge.IsTag ? "#F59E0B" : LaneColor(node.Lane);
                     var w = TextWidth(badge.Text, 10) + 12;
                     <rect x="@F(cursor)" y="@F(y - 8.5)" width="@F(w)" height="17" rx="4"
@@ -69,7 +70,7 @@
             @if (ShowMessage && !string.IsNullOrEmpty(node.Commit.Message))
             {
                 var max = MaxChars(Width - cursor - 6, 12);
-                var msg = Truncate(node.Commit.Message!, max);
+                var msg = Truncate(Collapse(node.Commit.Message!), max);
                 @((MarkupString)$"<text x=\"{F(cursor)}\" y=\"{F(y + 4)}\" font-size=\"12\" fill=\"{text}\">{Escape(msg)}</text>")
             }
         }
@@ -91,21 +92,42 @@
         {
             var node = layout.Nodes[row];
             var c = node.Commit;
-            var header = string.IsNullOrEmpty(c.Message) ? ShortId(c.Id) : c.Message!;
-            var line2 = c.Author;
-            var line3 = c.Date is { } d
-                ? $"{ShortId(c.Id)} · {FormatDate(d)}"
-                : ShortId(c.Id);
+            // Never let the box exceed the chart width, so it can't be clipped horizontally.
+            var tipMaxW = Math.Min(TooltipMaxWidth, Width - 8);
+            var maxChars = MaxChars(tipMaxW - 20, 11.5);
 
-            var lines = new List<string> { header };
-            if (!string.IsNullOrEmpty(line2)) lines.Add(line2!);
-            lines.Add(line3);
+            // Rows top-to-bottom: wrapped message (header), author, the optional colored
+            // stats row, then the short-id/date — kept last so the commit id is always the
+            // final line. Everything is folded into the width/height sizing below.
+            var lines = new List<(string Text, bool Header)>();
+            if (string.IsNullOrEmpty(c.Message))
+            {
+                lines.Add((ShortId(c.Id), true));
+            }
+            else
+            {
+                foreach (var ml in WrapText(c.Message!, maxChars, Math.Max(1, TooltipMaxLines)))
+                    lines.Add((ml, true));
+            }
+            if (!string.IsNullOrEmpty(c.Author))
+                lines.Add((Truncate(Collapse(c.Author!), maxChars), false));
 
-            var boxW = lines.Select(l => TextWidth(l, 11.5)).Max() + 20;
-            var boxH = 12 + lines.Count * 16;
+            var stats = StatSegments(c);
+            var idLine = Truncate(c.Date is { } d ? $"{ShortId(c.Id)} · {FormatDate(d)}" : ShortId(c.Id), maxChars);
+
+            var statsRow = lines.Count;
+            var idRow = lines.Count + (stats.Count > 0 ? 1 : 0);
+            var rowCount = idRow + 1;
+
+            var boxW = Math.Min(tipMaxW,
+                lines.Select(l => l.Text)
+                     .Append(stats.Count > 0 ? StatsPlain(stats) : "")
+                     .Append(idLine)
+                     .Select(t => TextWidth(t, 11.5)).Max() + 20);
+            var boxH = 12 + rowCount * 16;
 
             var anchorX = LaneX(node.Lane) + DotRadius + 8;
-            var boxX = Math.Min(anchorX, Width - boxW - 4);
+            var boxX = Math.Max(4, Math.Min(anchorX, Width - boxW - 4));
             var boxY = RowY(node.Row) - boxH / 2.0;
             boxY = Math.Max(4, Math.Min(boxY, TotalHeight - boxH - 4));
 
@@ -115,10 +137,18 @@
                 @for (var i = 0; i < lines.Count; i++)
                 {
                     var ly = boxY + 20 + i * 16;
-                    var weight = i == 0 ? "600" : "400";
-                    var opacity = i == 0 ? "1" : "0.85";
-                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(ly)}\" font-size=\"11.5\" font-weight=\"{weight}\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"{opacity}\">{Escape(lines[i])}</text>")
+                    var weight = lines[i].Header ? "600" : "400";
+                    var opacity = lines[i].Header ? "1" : "0.85";
+                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(ly)}\" font-size=\"11.5\" font-weight=\"{weight}\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"{opacity}\">{Escape(lines[i].Text)}</text>")
                 }
+                @if (stats.Count > 0)
+                {
+                    var sy = boxY + 20 + statsRow * 16;
+                    var tspans = string.Concat(stats.Select((s, i) =>
+                        $"<tspan{(i == 0 ? "" : " dx=\"8\"")} fill=\"{s.Color}\" opacity=\"{(s.Muted ? "0.85" : "1")}\">{Escape(s.Text)}</tspan>"));
+                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(sy)}\" font-size=\"11.5\">{tspans}</text>")
+                }
+                @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(boxY + 20 + idRow * 16)}\" font-size=\"11.5\" font-weight=\"400\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"0.85\">{Escape(idLine)}</text>")
             </g>
         }
     </svg>

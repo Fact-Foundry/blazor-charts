@@ -20,6 +20,22 @@ public partial class WorldMapChart : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private string AccessibleName => string.IsNullOrEmpty(Title) ? "World map heat map" : Title!;
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (Data.Count == 0) return "World map heat map with no data.";
+        var top = Data.OrderByDescending(d => d.Value).First();
+        return $"World map heat map with {Data.Count} countries with data. Highest is {top.CountryCode} at {top.Value}.";
+    }
+
     private string? _hoveredCountry;
 
     private const double MapViewBoxWidth = 1000;

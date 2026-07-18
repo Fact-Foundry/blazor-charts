@@ -43,8 +43,18 @@ public partial class CommitGraph : ComponentBase
     /// <summary>Number of leading id characters to show as the short id. Defaults to 7.</summary>
     [Parameter] public int ShortIdLength { get; set; } = 7;
 
-    /// <summary>Format string for the tooltip date. Defaults to <c>yyyy-MM-dd HH:mm</c>.</summary>
-    [Parameter] public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm";
+    /// <summary>
+    /// Format string for the tooltip date. Defaults to <c>MMM d, yyyy HH:mm</c>
+    /// (e.g. "Jul 15, 2026 07:48") — a month-abbreviated form that reads unambiguously
+    /// everywhere, rather than a locale-sensitive all-numeric date.
+    /// </summary>
+    [Parameter] public string DateFormat { get; set; } = "MMM d, yyyy HH:mm";
+
+    /// <summary>Maximum tooltip width in SVG units; long messages wrap to fit. Defaults to 360.</summary>
+    [Parameter] public int TooltipMaxWidth { get; set; } = 360;
+
+    /// <summary>Maximum wrapped message lines in the tooltip before ellipsizing. Defaults to 6.</summary>
+    [Parameter] public int TooltipMaxLines { get; set; } = 6;
 
     /// <summary>Scale to the container width (SVG <c>width="100%"</c>). Defaults to true.</summary>
     [Parameter] public bool Responsive { get; set; } = true;
@@ -58,6 +68,20 @@ public partial class CommitGraph : ComponentBase
     [CascadingParameter] private ChartTheme? CascadingTheme { get; set; }
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
+
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private const string AccessibleName = "Commit graph";
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription() =>
+        Commits.Count == 0
+            ? "Commit graph with no commits."
+            : $"Commit graph of {Commits.Count} commits across {_layout.LaneCount} branch lanes.";
 
     private int? _hoveredRow;
 
@@ -226,13 +250,42 @@ public partial class CommitGraph : ComponentBase
 
     private readonly record struct RefBadge(string Text, bool IsTag);
 
-    private static RefBadge ParseRef(string raw)
+    // Expand each raw decoration into badges: a "HEAD -> main" (or comma-joined) string
+    // becomes separate "HEAD" and "main" badges rather than one arrowed label, and a
+    // "tag:"-prefixed token is styled as a tag.
+    private static IEnumerable<RefBadge> ExpandRefs(IReadOnlyList<string> refs)
     {
-        var trimmed = raw.Trim();
-        if (trimmed.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
-            return new RefBadge(trimmed[4..].Trim(), IsTag: true);
-        return new RefBadge(trimmed, IsTag: false);
+        foreach (var raw in refs)
+        {
+            foreach (var part in raw.Split(["->", ","], StringSplitOptions.RemoveEmptyEntries))
+            {
+                var t = part.Trim();
+                if (t.Length == 0) continue;
+                if (t.StartsWith("tag:", StringComparison.OrdinalIgnoreCase))
+                    yield return new RefBadge(t[4..].Trim(), IsTag: true);
+                else
+                    yield return new RefBadge(t, IsTag: false);
+            }
+        }
     }
+
+    /// <summary>A colored run in the tooltip's file-change stats row.</summary>
+    private readonly record struct StatSegment(string Text, string Color, bool Muted);
+
+    private List<StatSegment> StatSegments(CommitNode c)
+    {
+        var segs = new List<StatSegment>();
+        if (c.FilesChanged is int f)
+            segs.Add(new($"{f} file{(f == 1 ? "" : "s")} changed", ResolvedTheme.TooltipTextColor, Muted: true));
+        if (c.Insertions is int ins && ins > 0)
+            segs.Add(new($"+{ins}", "#22c55e", Muted: false));
+        if (c.Deletions is int del && del > 0)
+            segs.Add(new($"-{del}", "#ef4444", Muted: false));
+        return segs;
+    }
+
+    private static string StatsPlain(List<StatSegment> segs) =>
+        string.Join("  ", segs.Select(s => s.Text));
 
     private string ShortId(string id) =>
         id.Length <= ShortIdLength ? id : id[..ShortIdLength];
@@ -264,5 +317,42 @@ public partial class CommitGraph : ComponentBase
     }
 
     private static int MaxChars(double available, double fontSize) =>
-        (int)(available / (fontSize * 0.58));
+        Math.Max(1, (int)(available / (fontSize * 0.58)));
+
+    /// <summary>Collapse any run of whitespace (including newlines) to single spaces.</summary>
+    private static string Collapse(string s) =>
+        string.Join(' ', s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+    /// <summary>
+    /// Greedy word-wrap to at most <paramref name="maxChars"/> per line and
+    /// <paramref name="maxLines"/> lines, hard-breaking over-long tokens (hashes,
+    /// snake_case ids) and ellipsizing the last line when the text overflows.
+    /// </summary>
+    private static List<string> WrapText(string text, int maxChars, int maxLines)
+    {
+        if (maxChars < 1) maxChars = 1;
+        var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        var lines = new List<string>();
+        var cur = "";
+        void Flush() { if (cur.Length > 0) { lines.Add(cur); cur = ""; } }
+
+        foreach (var word in words)
+        {
+            var w = word;
+            while (w.Length > maxChars) { Flush(); lines.Add(w[..maxChars]); w = w[maxChars..]; }
+            if (cur.Length == 0) cur = w;
+            else if (cur.Length + 1 + w.Length <= maxChars) cur += " " + w;
+            else { Flush(); cur = w; }
+        }
+        Flush();
+
+        if (lines.Count > maxLines)
+        {
+            var kept = lines.GetRange(0, maxLines);
+            var last = kept[^1];
+            kept[^1] = last.Length >= maxChars ? last[..(maxChars - 1)] + "…" : last + " …";
+            return kept;
+        }
+        return lines;
+    }
 }

@@ -23,6 +23,24 @@ public partial class PieChart : ComponentBase
 
     private ChartTheme ResolvedTheme => Theme ?? CascadingTheme ?? ChartTheme.Light;
 
+    /// <summary>Accessible description read by screen readers, emitted as the SVG <c>&lt;desc&gt;</c>. Auto-generated from the data when unset.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    private readonly string _a11yId = "ffc-" + Guid.NewGuid().ToString("N")[..8];
+    private string TitleId => _a11yId + "t";
+    private string DescId => _a11yId + "d";
+    private string AccessibleName => string.IsNullOrEmpty(Title) ? "Pie chart" : Title!;
+    private string AccessibleDescription => Description ?? BuildAccessibleDescription();
+
+    private string BuildAccessibleDescription()
+    {
+        if (Data.Count == 0) return "Pie chart with no data.";
+        var total = Data.Sum(d => d.Value);
+        var top = Data.OrderByDescending(d => d.Value).First();
+        var pct = total > 0 ? (int)Math.Round((double)(top.Value / total) * 100) : 0;
+        return $"Pie chart of {Data.Count} segments. Largest is {top.Label} at {pct}%.";
+    }
+
     private int LegendWidth => ShowLegendValues ? 210 : 140;
     private const int LabelMargin = 60;
     private const double MinLabelSpacing = 14;

@@ -173,7 +173,8 @@ public class LineChartTests : BunitContext
             .Add(p => p.Width, 600)
             .Add(p => p.Height, 300));
 
-        var labelCount = cut.Markup.Split("Day").Length - 1;
+        // Count rendered x-axis label <text> elements (the <desc> is not a <text>).
+        var labelCount = cut.FindAll("text").Count(t => t.TextContent.StartsWith("Day"));
         Assert.True(labelCount <= 5, $"Expected at most 5 labels, got {labelCount}");
     }
 

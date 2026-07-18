@@ -9,7 +9,10 @@
     <svg viewBox="0 0 @Width @Height"
          width="@(Responsive ? "100%" : Width.ToString())"
          height="@(Responsive ? null : Height.ToString())"
-         preserveAspectRatio="none" style="display:block;overflow:visible;">
+         preserveAspectRatio="none" role="img" aria-labelledby="@TitleId @DescId"
+         style="display:block;overflow:visible;">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
         @if (ShowArea)
         {
             <defs>

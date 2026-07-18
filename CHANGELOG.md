@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-18
+
+### Fixed
+
+- **CommitGraph** — ref decorations now split into separate badges: a `HEAD -> main` (or comma-joined) decoration renders as distinct `HEAD` and `main` badges instead of one arrowed label, so consumers can pass raw `git log --decorate` strings and get clean output.
+- **CommitGraph** — a long commit message no longer stretches the hover tooltip across the whole panel and buries the rows behind it (reported against 1.0.3). The message now word-wraps to a bounded width over up to six lines (configurable via `TooltipMaxLines`) before ellipsizing, with the author and short-id/date beneath as meta rows; embedded newlines and runs of whitespace are collapsed, and long tokens (hashes, `snake_case` ids) hard-break instead of overflowing. The box is additionally clamped to the chart's own width, so it can never be clipped at the edge even when `TooltipMaxWidth` exceeds a narrow chart.
+
+### Added
+
+- **Accessible `<title>` + `<desc>` on every SVG chart** — `LineChart`, `BarChart`, `PieChart`, `DonutChart`, `WorldMapChart`, `Sparkline`, `CommitGraph`, and `CalendarHeatmap` now emit an accessible name (`<title>`) and a data-aware description (`<desc>`) wired through `role="img"` + `aria-labelledby`, so a screen reader announces what the chart shows (e.g. _"Pie chart of 2 segments. Largest is Chrome at 60%."_). A new `Description` parameter overrides the auto-generated text; the accessible name uses `Title` when set, otherwise the chart type.
+- **CalendarHeatmap component** — a GitHub-contributions-style calendar heatmap rendered as pure Razor-to-SVG and themed through `ChartThemeProvider`. Takes a flat list of `CalendarPoint` (day + value, same-day points summed) and lays it out as week columns × weekday rows, coloring each cell by intensity bucket. Month and weekday labels, a "Less … More" legend, and a themed hover tooltip (date + value); `OnDayClick` reports the selected day. Params: `Data`, `StartDate`, `EndDate`, `WeekStart`, `CellSize`, `CellGap`, `CellRadius`, `Levels`, `Color`, `ShowMonthLabels`, `ShowWeekdayLabels`, `ShowLegend`, `ShowTooltip`, `DateFormat`, `ValueFormat`, `Responsive`, `OnDayClick`.
+- **File-change stats in the `CommitGraph` tooltip** — optional `FilesChanged`, `Insertions`, and `Deletions` fields on `CommitNode` (mapping directly to LibGit2Sharp's `Patch.FilesChanged`/`LinesAdded`/`LinesDeleted`) render a GitLens-style stats row — e.g. `16 files changed  +757  -78` with insertions green and deletions red. The row is omitted entirely when no stat field is set.
+- **`TooltipMaxWidth` and `TooltipMaxLines` parameters on `CommitGraph`** — cap the hover tooltip's width (SVG units, default 360) and wrapped-message line count (default 6); longer messages wrap and then ellipsize to fit rather than widening or lengthening the box unboundedly.
+
+### Changed
+
+- **CommitGraph** tooltip date now defaults to a month-abbreviated format (`MMM d, yyyy HH:mm`, e.g. "Jul 15, 2026 07:48") instead of `yyyy-MM-dd HH:mm`, so it reads unambiguously regardless of the viewer's locale. Override via `DateFormat` as before.
+
 ## [1.0.3] - 2026-07-17
 
 ### Added
