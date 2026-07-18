@@ -32,4 +32,17 @@ public class CommitNode
 
     /// <summary>Optional commit timestamp, shown in the hover tooltip.</summary>
     public DateTimeOffset? Date { get; set; }
+
+    /// <summary>
+    /// Optional count of files changed by this commit. When set (with or without
+    /// <see cref="Insertions"/>/<see cref="Deletions"/>) a stats row appears in the
+    /// hover tooltip. Maps to LibGit2Sharp's <c>Patch.FilesChanged</c>.
+    /// </summary>
+    public int? FilesChanged { get; set; }
+
+    /// <summary>Optional inserted-line count, shown green in the tooltip stats row. Maps to <c>Patch.LinesAdded</c>.</summary>
+    public int? Insertions { get; set; }
+
+    /// <summary>Optional deleted-line count, shown red in the tooltip stats row. Maps to <c>Patch.LinesDeleted</c>.</summary>
+    public int? Deletions { get; set; }
 }
