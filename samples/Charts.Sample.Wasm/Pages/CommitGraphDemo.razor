@@ -1,0 +1,55 @@
+@page "/commit-graph"
+
+<h2>Commit Graph</h2>
+
+<p style="max-width: 640px; opacity: .8;">
+    A git-style branch/commit lane view. Hover a row for the author, short id and date;
+    click a row to select it. Feed it commits newest-first — exactly what a LibGit2Sharp
+    walk yields.
+</p>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showRefs" /> Show refs</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showMessage" /> Show messages</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showTooltip" /> Hover tooltip</label>
+</div>
+
+<div style="max-width: 720px; border: 1px solid rgba(128,128,128,.25); border-radius: 8px; padding: 8px;">
+    <CommitGraph Commits="@history"
+                 ShowRefs="showRefs"
+                 ShowMessage="showMessage"
+                 ShowTooltip="showTooltip"
+                 OnCommitClick="c => selected = c" />
+</div>
+
+@if (selected is not null)
+{
+    <p style="margin-top: 1rem;">
+        Selected: <strong>@selected.Id[..7]</strong> — @selected.Message
+    </p>
+}
+
+@code {
+    private bool showRefs = true;
+    private bool showMessage = true;
+    private bool showTooltip = true;
+    private CommitNode? selected;
+
+    // A small branchy history, newest first: a feature branch merged back into main,
+    // a hotfix branch, a lightweight tag, and a not-yet-shown parent at the bottom.
+    private readonly List<CommitNode> history =
+    [
+        new() { Id = "9f3a1c0e", ParentIds = ["7b2d4f10", "5c8e9a22"], Message = "Merge feature/commit-graph", Author = "Kevin", Date = When(0), Refs = ["HEAD -> main"] },
+        new() { Id = "5c8e9a22", ParentIds = ["3a1b2c33"], Message = "Add hover tooltip + lane colors", Author = "Kevin", Date = When(1), Refs = ["feature/commit-graph"] },
+        new() { Id = "7b2d4f10", ParentIds = ["6d0f1e44"], Message = "Release 1.0.3", Author = "Kevin", Date = When(2), Refs = ["tag: v1.0.3"] },
+        new() { Id = "3a1b2c33", ParentIds = ["6d0f1e44"], Message = "Sketch lane-assignment pass", Author = "Ada", Date = When(3) },
+        new() { Id = "6d0f1e44", ParentIds = ["4e5f6a55", "2c3d4e66"], Message = "Merge hotfix/tooltip-clip", Author = "Kevin", Date = When(4) },
+        new() { Id = "2c3d4e66", ParentIds = ["4e5f6a55"], Message = "Fix tooltip clipping at edges", Author = "Grace", Date = When(5), Refs = ["hotfix/tooltip-clip"] },
+        new() { Id = "4e5f6a55", ParentIds = ["1a2b3c77"], Message = "Wire ChartThemeProvider", Author = "Kevin", Date = When(6) },
+        new() { Id = "1a2b3c77", ParentIds = ["0f9e8d88"], Message = "Initial charts scaffold", Author = "Kevin", Date = When(7), Refs = ["tag: v1.0.0"] },
+        new() { Id = "0f9e8d88", ParentIds = ["earlier00"], Message = "Import from prototype", Author = "Kevin", Date = When(8) }
+    ];
+
+    private static DateTimeOffset When(int daysAgo) =>
+        new DateTimeOffset(2026, 7, 17, 9, 30, 0, TimeSpan.Zero).AddDays(-daysAgo);
+}

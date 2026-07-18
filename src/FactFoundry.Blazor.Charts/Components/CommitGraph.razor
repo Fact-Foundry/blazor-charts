@@ -1,0 +1,125 @@
+@namespace FactFoundry.Blazor.Charts.Components
+@using System.Globalization
+
+@if (Commits.Count > 0)
+{
+    var layout = _layout;
+    var laneCount = layout.LaneCount;
+    var msgX = MessageX(laneCount);
+    var text = ResolvedTheme.TextColor;
+    var height = TotalHeight;
+
+    <svg class="ff-commitgraph"
+         width="@(Responsive ? "100%" : Width.ToString())"
+         height="@(Responsive ? null : height.ToString())"
+         viewBox="0 0 @Width @height"
+         preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+         xmlns="http://www.w3.org/2000/svg" role="img"
+         style="display:block;font-variant-numeric:tabular-nums;">
+
+        @* Hovered-row highlight, drawn under everything *@
+        @if (_hoveredRow is int hr)
+        {
+            <rect x="0" y="@F(PadTop + hr * RowHeight)" width="@Width" height="@RowHeight"
+                  fill="@ResolvedTheme.GridColor" fill-opacity="@ResolvedTheme.GridOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
+        }
+
+        @* Lane connectors *@
+        @foreach (var e in layout.Edges)
+        {
+            <path d="@EdgePath(e)" fill="none" stroke="@LaneColor(e.ColorLane)"
+                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-opacity="@(e.Dangling ? "0.35" : "0.9")" />
+        }
+
+        @* Commit dots *@
+        @foreach (var node in layout.Nodes)
+        {
+            var isMerge = node.Commit.ParentIds.Count > 1;
+            var r = _hoveredRow == node.Row ? DotRadius + 1 : DotRadius;
+            <circle cx="@F(LaneX(node.Lane))" cy="@F(RowY(node.Row))" r="@F(r)"
+                    fill="@(isMerge ? ResolvedTheme.TextColor : LaneColor(node.Lane))"
+                    stroke="@LaneColor(node.Lane)" stroke-width="@(isMerge ? "2" : "0")" />
+            @if (isMerge)
+            {
+                <circle cx="@F(LaneX(node.Lane))" cy="@F(RowY(node.Row))" r="@F(r - 2)" fill="@LaneColor(node.Lane)" />
+            }
+        }
+
+        @* Ref badges + commit messages *@
+        @foreach (var node in layout.Nodes)
+        {
+            var y = RowY(node.Row);
+            var cursor = msgX;
+
+            @if (ShowRefs)
+            {
+                foreach (var raw in node.Commit.Refs)
+                {
+                    var badge = ParseRef(raw);
+                    var color = badge.IsTag ? "#F59E0B" : LaneColor(node.Lane);
+                    var w = TextWidth(badge.Text, 10) + 12;
+                    <rect x="@F(cursor)" y="@F(y - 8.5)" width="@F(w)" height="17" rx="4"
+                          fill="@color" fill-opacity="0.16" stroke="@color" stroke-opacity="0.55" />
+                    @((MarkupString)$"<text x=\"{F(cursor + 6)}\" y=\"{F(y + 3.5)}\" font-size=\"10\" fill=\"{text}\">{Escape(badge.Text)}</text>")
+                    cursor += w + 5;
+                }
+            }
+
+            @if (ShowMessage && !string.IsNullOrEmpty(node.Commit.Message))
+            {
+                var max = MaxChars(Width - cursor - 6, 12);
+                var msg = Truncate(node.Commit.Message!, max);
+                @((MarkupString)$"<text x=\"{F(cursor)}\" y=\"{F(y + 4)}\" font-size=\"12\" fill=\"{text}\">{Escape(msg)}</text>")
+            }
+        }
+
+        @* Full-row hover / click targets *@
+        @foreach (var node in layout.Nodes)
+        {
+            var captured = node;
+            <rect x="0" y="@F(PadTop + node.Row * RowHeight)" width="@Width" height="@RowHeight"
+                  fill="transparent"
+                  style="@(OnCommitClick.HasDelegate ? "cursor:pointer;" : null)"
+                  @onmouseover="() => OnRowOver(captured.Row)"
+                  @onmouseout="OnRowOut"
+                  @onclick="() => HandleClick(captured.Commit)" />
+        }
+
+        @* Tooltip *@
+        @if (ShowTooltip && _hoveredRow is int row && row < layout.Nodes.Count)
+        {
+            var node = layout.Nodes[row];
+            var c = node.Commit;
+            var header = string.IsNullOrEmpty(c.Message) ? ShortId(c.Id) : c.Message!;
+            var line2 = c.Author;
+            var line3 = c.Date is { } d
+                ? $"{ShortId(c.Id)} · {FormatDate(d)}"
+                : ShortId(c.Id);
+
+            var lines = new List<string> { header };
+            if (!string.IsNullOrEmpty(line2)) lines.Add(line2!);
+            lines.Add(line3);
+
+            var boxW = lines.Select(l => TextWidth(l, 11.5)).Max() + 20;
+            var boxH = 12 + lines.Count * 16;
+
+            var anchorX = LaneX(node.Lane) + DotRadius + 8;
+            var boxX = Math.Min(anchorX, Width - boxW - 4);
+            var boxY = RowY(node.Row) - boxH / 2.0;
+            boxY = Math.Max(4, Math.Min(boxY, TotalHeight - boxH - 4));
+
+            <g style="pointer-events:none;">
+                <rect x="@F(boxX)" y="@F(boxY)" width="@F(boxW)" height="@F(boxH)" rx="5"
+                      fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
+                @for (var i = 0; i < lines.Count; i++)
+                {
+                    var ly = boxY + 20 + i * 16;
+                    var weight = i == 0 ? "600" : "400";
+                    var opacity = i == 0 ? "1" : "0.85";
+                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(ly)}\" font-size=\"11.5\" font-weight=\"{weight}\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"{opacity}\">{Escape(lines[i])}</text>")
+                }
+            </g>
+        }
+    </svg>
+}
