@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-07-20
+
+### Fixed
+
+- **CommitGraph** — the graph no longer breaks when a host stylesheet sizes SVG text. Previously each `<text>` carried its size as a `font-size` **presentation attribute**, which any host CSS rule (even a broad `svg text { … }`) silently overrides — so the text rendered larger than the layout, which was still computed for the old size, and the badges, rows, and lanes overlapped. Text sizes are now pinned via inline `style` (which beats a stylesheet rule), keeping the drawn text and the computed layout in lock-step.
+- **CommitGraph** — a wide container no longer magnifies the whole graph. In `Responsive` mode the SVG filled the container via `width="100%"` and a fixed `viewBox`, so a panel wider than the graph scaled every unit up together — dots, badges, spacing, and text ballooning as the panel stretched. Responsive now caps the on-screen width at `Width` CSS pixels (still shrinking to fit a narrower container), so the graph renders at its intrinsic size and text stays at `FontSize`. Give a wide panel more room by raising `Width` (longer messages); it no longer changes the text size.
+
+### Added
+
+- **`FontSize` parameter on `CommitGraph`** — the base size (in SVG units) for commit messages, defaulting to 12. Every other measurement — row height, lane width, dot radius, ref-badge and tooltip typography and spacing — now scales from it, so the whole graph stays in proportion at any size. Set `FontSize` to match the surrounding UI and the layout follows; the previous look is unchanged at the default. `RowHeight`, `LaneWidth`, and `DotRadius` are now nullable and default to `FontSize`-derived values, but an explicit value still wins as before.
+
 ## [1.1.0] - 2026-07-18
 
 ### Fixed

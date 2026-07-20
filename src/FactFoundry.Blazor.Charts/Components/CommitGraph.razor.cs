@@ -19,16 +19,32 @@ public partial class CommitGraph : ComponentBase
     /// <summary>The commits to draw, in display order — newest (row 0) at the top.</summary>
     [Parameter] public List<CommitNode> Commits { get; set; } = [];
 
-    /// <summary>Vertical distance between commit rows, in SVG units. Defaults to 28.</summary>
-    [Parameter] public int RowHeight { get; set; } = 28;
+    /// <summary>
+    /// Base font size for commit messages, in SVG units. Every other measurement —
+    /// row height, lane width, dot radius, badge and tooltip typography and spacing —
+    /// scales from this unless explicitly overridden, so the whole graph stays in
+    /// proportion at any size. The rendered text size is pinned inline (it wins over a
+    /// host stylesheet), keeping the drawn text and the computed layout in lock-step.
+    /// Defaults to 12.
+    /// </summary>
+    [Parameter] public double FontSize { get; set; } = 12;
 
-    /// <summary>Horizontal distance between lanes, in SVG units. Defaults to 16.</summary>
-    [Parameter] public int LaneWidth { get; set; } = 16;
+    /// <summary>Vertical distance between commit rows, in SVG units. Defaults to <c>FontSize</c>-derived (28 at the default 12px).</summary>
+    [Parameter] public int? RowHeight { get; set; }
 
-    /// <summary>Radius of the commit dots. Defaults to 4.5.</summary>
-    [Parameter] public double DotRadius { get; set; } = 4.5;
+    /// <summary>Horizontal distance between lanes, in SVG units. Defaults to <c>FontSize</c>-derived (16 at the default 12px).</summary>
+    [Parameter] public int? LaneWidth { get; set; }
 
-    /// <summary>Overall component width in SVG units; the message column flexes to fill it. Defaults to 720.</summary>
+    /// <summary>Radius of the commit dots. Defaults to <c>FontSize</c>-derived (4.5 at the default 12px).</summary>
+    [Parameter] public double? DotRadius { get; set; }
+
+    /// <summary>
+    /// Intrinsic component width in SVG units; the message column flexes to fill it. Defaults to 720.
+    /// When <see cref="Responsive"/> is on this doubles as the maximum on-screen width in CSS pixels —
+    /// the graph scales down to fit a narrower container but never magnifies past this size, so text
+    /// stays the size <see cref="FontSize"/> asks for instead of ballooning in a wide panel. Raise it
+    /// to give a wide panel more room (longer messages), not to make the text bigger — that's <see cref="FontSize"/>.
+    /// </summary>
     [Parameter] public int Width { get; set; } = 720;
 
     /// <summary>Show each commit's subject line beside the lane strip. Defaults to true.</summary>
@@ -56,7 +72,11 @@ public partial class CommitGraph : ComponentBase
     /// <summary>Maximum wrapped message lines in the tooltip before ellipsizing. Defaults to 6.</summary>
     [Parameter] public int TooltipMaxLines { get; set; } = 6;
 
-    /// <summary>Scale to the container width (SVG <c>width="100%"</c>). Defaults to true.</summary>
+    /// <summary>
+    /// Fill the container width (SVG <c>width="100%"</c>), shrinking to fit a narrow container but
+    /// capping at <see cref="Width"/> CSS pixels so a wide container never magnifies the whole graph.
+    /// Turn off for a fixed <see cref="Width"/>×height render in exact SVG units. Defaults to true.
+    /// </summary>
     [Parameter] public bool Responsive { get; set; } = true;
 
     /// <summary>Raised when a commit row is clicked.</summary>
@@ -207,19 +227,35 @@ public partial class CommitGraph : ComponentBase
 
     // ---- Geometry -------------------------------------------------------------------
 
-    private const int PadTop = 6;
-    private const int StripPadLeft = 12;
-    private const int MessageGap = 14;
+    // The design was tuned at a 12px message font; every constant below is expressed as a
+    // multiple of that so the whole graph scales uniformly with FontSize. At the default
+    // FontSize (12) the scale is 1 and the numbers reduce to the original values exactly.
+    private double Scale => FontSize / 12.0;
 
-    private double LaneX(int lane) => StripPadLeft + lane * LaneWidth + LaneWidth / 2.0;
+    // Effective drawing metrics: an explicit parameter wins, otherwise scale from FontSize.
+    private double EffRowHeight => RowHeight ?? 28 * Scale;
+    private double EffLaneWidth => LaneWidth ?? 16 * Scale;
+    private double EffDotRadius => DotRadius ?? 4.5 * Scale;
 
-    private double RowY(int row) => PadTop + row * RowHeight + RowHeight / 2.0;
+    // Typography, all relative to the message font. Rendered inline so a host stylesheet
+    // can't resize the text out from under the layout that was computed for it.
+    private double MessageFontSize => FontSize;
+    private double RefFontSize => FontSize * (10.0 / 12.0);
+    private double TooltipFontSize => FontSize * (11.5 / 12.0);
 
-    private double StripWidth(int laneCount) => StripPadLeft + laneCount * LaneWidth;
+    private double PadTop => 6 * Scale;
+    private double StripPadLeft => 12 * Scale;
+    private double MessageGap => 14 * Scale;
+
+    private double LaneX(int lane) => StripPadLeft + lane * EffLaneWidth + EffLaneWidth / 2.0;
+
+    private double RowY(int row) => PadTop + row * EffRowHeight + EffRowHeight / 2.0;
+
+    private double StripWidth(int laneCount) => StripPadLeft + laneCount * EffLaneWidth;
 
     private double MessageX(int laneCount) => StripWidth(laneCount) + MessageGap;
 
-    private int TotalHeight => PadTop * 2 + Math.Max(Commits.Count, 0) * RowHeight;
+    private double TotalHeight => PadTop * 2 + Math.Max(Commits.Count, 0) * EffRowHeight;
 
     private string LaneColor(int lane) => ResolvedTheme.GetColor(lane);
 
@@ -240,9 +276,9 @@ public partial class CommitGraph : ComponentBase
             return $"M{F(x1)} {F(y1)} L{F(x2)} {F(y2)}";
 
         // Bend across one row height, then drop straight down the destination lane.
-        var bendY = Math.Min(y1 + RowHeight, y2);
+        var bendY = Math.Min(y1 + EffRowHeight, y2);
         return $"M{F(x1)} {F(y1)} " +
-               $"C{F(x1)} {F(y1 + RowHeight * 0.55)} {F(x2)} {F(bendY - RowHeight * 0.55)} {F(x2)} {F(bendY)} " +
+               $"C{F(x1)} {F(y1 + EffRowHeight * 0.55)} {F(x2)} {F(bendY - EffRowHeight * 0.55)} {F(x2)} {F(bendY)} " +
                $"L{F(x2)} {F(y2)}";
     }
 

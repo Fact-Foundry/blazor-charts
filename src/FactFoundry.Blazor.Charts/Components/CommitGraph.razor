@@ -11,18 +11,18 @@
 
     <svg class="ff-commitgraph"
          width="@(Responsive ? "100%" : Width.ToString())"
-         height="@(Responsive ? null : height.ToString())"
-         viewBox="0 0 @Width @height"
-         preserveAspectRatio="@(Responsive ? "xMidYMid meet" : null)"
+         height="@(Responsive ? null : F(height))"
+         viewBox="0 0 @Width @(F(height))"
+         preserveAspectRatio="@(Responsive ? "xMinYMid meet" : null)"
          xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
-         style="display:block;font-variant-numeric:tabular-nums;">
+         style="display:block;font-variant-numeric:tabular-nums;font-size:@(F(FontSize))px;@(Responsive ? $"max-width:{Width}px;" : "")">
         <title id="@TitleId">@AccessibleName</title>
         <desc id="@DescId">@AccessibleDescription</desc>
 
         @* Hovered-row highlight, drawn under everything *@
         @if (_hoveredRow is int hr)
         {
-            <rect x="0" y="@F(PadTop + hr * RowHeight)" width="@Width" height="@RowHeight"
+            <rect x="0" y="@F(PadTop + hr * EffRowHeight)" width="@Width" height="@F(EffRowHeight)"
                   fill="@ResolvedTheme.GridColor" fill-opacity="@ResolvedTheme.GridOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
         }
 
@@ -30,7 +30,7 @@
         @foreach (var e in layout.Edges)
         {
             <path d="@EdgePath(e)" fill="none" stroke="@LaneColor(e.ColorLane)"
-                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="@F(1.6 * Scale)" stroke-linecap="round" stroke-linejoin="round"
                   stroke-opacity="@(e.Dangling ? "0.35" : "0.9")" />
         }
 
@@ -38,13 +38,13 @@
         @foreach (var node in layout.Nodes)
         {
             var isMerge = node.Commit.ParentIds.Count > 1;
-            var r = _hoveredRow == node.Row ? DotRadius + 1 : DotRadius;
+            var r = _hoveredRow == node.Row ? EffDotRadius + Scale : EffDotRadius;
             <circle cx="@F(LaneX(node.Lane))" cy="@F(RowY(node.Row))" r="@F(r)"
                     fill="@(isMerge ? ResolvedTheme.TextColor : LaneColor(node.Lane))"
-                    stroke="@LaneColor(node.Lane)" stroke-width="@(isMerge ? "2" : "0")" />
+                    stroke="@LaneColor(node.Lane)" stroke-width="@(isMerge ? F(2 * Scale) : "0")" />
             @if (isMerge)
             {
-                <circle cx="@F(LaneX(node.Lane))" cy="@F(RowY(node.Row))" r="@F(r - 2)" fill="@LaneColor(node.Lane)" />
+                <circle cx="@F(LaneX(node.Lane))" cy="@F(RowY(node.Row))" r="@F(r - 2 * Scale)" fill="@LaneColor(node.Lane)" />
             }
         }
 
@@ -59,19 +59,19 @@
                 foreach (var badge in ExpandRefs(node.Commit.Refs))
                 {
                     var color = badge.IsTag ? "#F59E0B" : LaneColor(node.Lane);
-                    var w = TextWidth(badge.Text, 10) + 12;
-                    <rect x="@F(cursor)" y="@F(y - 8.5)" width="@F(w)" height="17" rx="4"
+                    var w = TextWidth(badge.Text, RefFontSize) + 12 * Scale;
+                    <rect x="@F(cursor)" y="@F(y - 8.5 * Scale)" width="@F(w)" height="@F(17 * Scale)" rx="@F(4 * Scale)"
                           fill="@color" fill-opacity="0.16" stroke="@color" stroke-opacity="0.55" />
-                    @((MarkupString)$"<text x=\"{F(cursor + 6)}\" y=\"{F(y + 3.5)}\" font-size=\"10\" fill=\"{text}\">{Escape(badge.Text)}</text>")
-                    cursor += w + 5;
+                    @((MarkupString)$"<text x=\"{F(cursor + 6 * Scale)}\" y=\"{F(y + 3.5 * Scale)}\" style=\"font-size:{F(RefFontSize)}px\" fill=\"{text}\">{Escape(badge.Text)}</text>")
+                    cursor += w + 5 * Scale;
                 }
             }
 
             @if (ShowMessage && !string.IsNullOrEmpty(node.Commit.Message))
             {
-                var max = MaxChars(Width - cursor - 6, 12);
+                var max = MaxChars(Width - cursor - 6 * Scale, MessageFontSize);
                 var msg = Truncate(Collapse(node.Commit.Message!), max);
-                @((MarkupString)$"<text x=\"{F(cursor)}\" y=\"{F(y + 4)}\" font-size=\"12\" fill=\"{text}\">{Escape(msg)}</text>")
+                @((MarkupString)$"<text x=\"{F(cursor)}\" y=\"{F(y + 4 * Scale)}\" style=\"font-size:{F(MessageFontSize)}px\" fill=\"{text}\">{Escape(msg)}</text>")
             }
         }
 
@@ -79,7 +79,7 @@
         @foreach (var node in layout.Nodes)
         {
             var captured = node;
-            <rect x="0" y="@F(PadTop + node.Row * RowHeight)" width="@Width" height="@RowHeight"
+            <rect x="0" y="@F(PadTop + node.Row * EffRowHeight)" width="@Width" height="@F(EffRowHeight)"
                   fill="transparent"
                   style="@(OnCommitClick.HasDelegate ? "cursor:pointer;" : null)"
                   @onmouseover="() => OnRowOver(captured.Row)"
@@ -94,7 +94,7 @@
             var c = node.Commit;
             // Never let the box exceed the chart width, so it can't be clipped horizontally.
             var tipMaxW = Math.Min(TooltipMaxWidth, Width - 8);
-            var maxChars = MaxChars(tipMaxW - 20, 11.5);
+            var maxChars = MaxChars(tipMaxW - 20 * Scale, TooltipFontSize);
 
             // Rows top-to-bottom: wrapped message (header), author, the optional colored
             // stats row, then the short-id/date — kept last so the commit id is always the
@@ -123,32 +123,32 @@
                 lines.Select(l => l.Text)
                      .Append(stats.Count > 0 ? StatsPlain(stats) : "")
                      .Append(idLine)
-                     .Select(t => TextWidth(t, 11.5)).Max() + 20);
-            var boxH = 12 + rowCount * 16;
+                     .Select(t => TextWidth(t, TooltipFontSize)).Max() + 20 * Scale);
+            var boxH = 12 * Scale + rowCount * 16 * Scale;
 
-            var anchorX = LaneX(node.Lane) + DotRadius + 8;
-            var boxX = Math.Max(4, Math.Min(anchorX, Width - boxW - 4));
+            var anchorX = LaneX(node.Lane) + EffDotRadius + 8 * Scale;
+            var boxX = Math.Max(4 * Scale, Math.Min(anchorX, Width - boxW - 4 * Scale));
             var boxY = RowY(node.Row) - boxH / 2.0;
-            boxY = Math.Max(4, Math.Min(boxY, TotalHeight - boxH - 4));
+            boxY = Math.Max(4 * Scale, Math.Min(boxY, TotalHeight - boxH - 4 * Scale));
 
             <g style="pointer-events:none;">
-                <rect x="@F(boxX)" y="@F(boxY)" width="@F(boxW)" height="@F(boxH)" rx="5"
+                <rect x="@F(boxX)" y="@F(boxY)" width="@F(boxW)" height="@F(boxH)" rx="@F(5 * Scale)"
                       fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
                 @for (var i = 0; i < lines.Count; i++)
                 {
-                    var ly = boxY + 20 + i * 16;
+                    var ly = boxY + 20 * Scale + i * 16 * Scale;
                     var weight = lines[i].Header ? "600" : "400";
                     var opacity = lines[i].Header ? "1" : "0.85";
-                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(ly)}\" font-size=\"11.5\" font-weight=\"{weight}\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"{opacity}\">{Escape(lines[i].Text)}</text>")
+                    @((MarkupString)$"<text x=\"{F(boxX + 10 * Scale)}\" y=\"{F(ly)}\" style=\"font-size:{F(TooltipFontSize)}px\" font-weight=\"{weight}\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"{opacity}\">{Escape(lines[i].Text)}</text>")
                 }
                 @if (stats.Count > 0)
                 {
-                    var sy = boxY + 20 + statsRow * 16;
+                    var sy = boxY + 20 * Scale + statsRow * 16 * Scale;
                     var tspans = string.Concat(stats.Select((s, i) =>
-                        $"<tspan{(i == 0 ? "" : " dx=\"8\"")} fill=\"{s.Color}\" opacity=\"{(s.Muted ? "0.85" : "1")}\">{Escape(s.Text)}</tspan>"));
-                    @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(sy)}\" font-size=\"11.5\">{tspans}</text>")
+                        $"<tspan{(i == 0 ? "" : $" dx=\"{F(8 * Scale)}\"")} fill=\"{s.Color}\" opacity=\"{(s.Muted ? "0.85" : "1")}\">{Escape(s.Text)}</tspan>"));
+                    @((MarkupString)$"<text x=\"{F(boxX + 10 * Scale)}\" y=\"{F(sy)}\" style=\"font-size:{F(TooltipFontSize)}px\">{tspans}</text>")
                 }
-                @((MarkupString)$"<text x=\"{F(boxX + 10)}\" y=\"{F(boxY + 20 + idRow * 16)}\" font-size=\"11.5\" font-weight=\"400\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"0.85\">{Escape(idLine)}</text>")
+                @((MarkupString)$"<text x=\"{F(boxX + 10 * Scale)}\" y=\"{F(boxY + 20 * Scale + idRow * 16 * Scale)}\" style=\"font-size:{F(TooltipFontSize)}px\" font-weight=\"400\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"0.85\">{Escape(idLine)}</text>")
             </g>
         }
     </svg>

@@ -15,8 +15,26 @@
     <label style="margin-left: 1rem;"><input type="checkbox" @bind="showTooltip" /> Hover tooltip</label>
 </div>
 
-<div style="max-width: 720px; border: 1px solid rgba(128,128,128,.25); border-radius: 8px; padding: 8px;">
+<div style="margin-bottom: 1rem; display: flex; gap: 2rem; flex-wrap: wrap;">
+    <label>Font size: <strong>@fontSize.ToString("0")px</strong>
+        <input type="range" min="10" max="24" step="1" @bind="fontSize" @bind:event="oninput"
+               style="vertical-align: middle; width: 220px; margin-left: .5rem;" />
+    </label>
+    <label>Visual width: <strong>@graphWidth.ToString("0")px</strong>
+        <input type="range" min="360" max="1400" step="20" @bind="graphWidth" @bind:event="oninput"
+               style="vertical-align: middle; width: 220px; margin-left: .5rem;" />
+    </label>
+</div>
+
+<p style="opacity: .7; margin: 0 0 .5rem;">
+    The container below is full-width. Drag <em>Visual width</em> to resize the graph and
+    <em>Font size</em> independently — text stays put when you widen the panel; it no longer balloons.
+</p>
+
+<div style="width: 100%; border: 1px solid rgba(128,128,128,.25); border-radius: 8px; padding: 8px;">
     <CommitGraph Commits="@history"
+                 Width="(int)graphWidth"
+                 FontSize="fontSize"
                  ShowRefs="showRefs"
                  ShowMessage="showMessage"
                  ShowTooltip="showTooltip"
@@ -34,6 +52,8 @@
     private bool showRefs = true;
     private bool showMessage = true;
     private bool showTooltip = true;
+    private double fontSize = 12;
+    private double graphWidth = 720;
     private CommitNode? selected;
 
     // A small branchy history, newest first: a feature branch merged back into main,

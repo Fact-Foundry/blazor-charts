@@ -374,6 +374,81 @@ public class CommitGraphTests : BunitContext
     }
 
     [Fact]
+    public void Responsive_Caps_On_Screen_Width_So_A_Wide_Container_Cannot_Magnify_It()
+    {
+        // Responsive fills the container but must not scale past its intrinsic width —
+        // otherwise a wide panel magnifies the whole graph (dots, badges, and text alike).
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, Linear())
+            .Add(x => x.Width, 640));
+
+        var svg = cut.Find("svg.ff-commitgraph");
+        Assert.Equal("100%", svg.GetAttribute("width"));
+        Assert.Contains("max-width:640px", svg.GetAttribute("style"));
+    }
+
+    [Fact]
+    public void Non_Responsive_Renders_At_Fixed_Pixel_Size_Without_A_Width_Cap()
+    {
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, Linear())
+            .Add(x => x.Responsive, false)
+            .Add(x => x.Width, 640));
+
+        var svg = cut.Find("svg.ff-commitgraph");
+        Assert.Equal("640", svg.GetAttribute("width"));
+        Assert.DoesNotContain("max-width", svg.GetAttribute("style"));
+    }
+
+    [Fact]
+    public void FontSize_Pins_Text_Size_Inline_So_Host_Css_Cannot_Desync_It()
+    {
+        // The message text carries its size as an inline style (which beats a host
+        // stylesheet rule), not a presentation attribute the host can override.
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, Linear())
+            .Add(x => x.FontSize, 18.0));
+
+        var msg = cut.FindAll("text").First(t => t.TextContent.Contains("third"));
+        Assert.Contains("font-size:18", msg.GetAttribute("style"));
+        Assert.Null(msg.GetAttribute("font-size"));
+    }
+
+    [Fact]
+    public void FontSize_Scales_Row_Height_And_Lane_Layout()
+    {
+        // At the default 12px the layout is unchanged; doubling the font doubles the
+        // vertical rhythm so enlarged text still gets the room it needs.
+        var baseline = Render<CommitGraph>(p => p.Add(x => x.Commits, Linear()));
+        var scaled = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, Linear())
+            .Add(x => x.FontSize, 24.0));
+
+        double Cy(IRenderedComponent<CommitGraph> c, int i) =>
+            double.Parse(c.FindAll("circle")[i].GetAttribute("cy")!, CultureInfo.InvariantCulture);
+
+        // Row-to-row spacing doubles with a doubled font size.
+        var baseStep = Cy(baseline, 1) - Cy(baseline, 0);
+        var scaledStep = Cy(scaled, 1) - Cy(scaled, 0);
+        Assert.Equal(baseStep * 2, scaledStep, precision: 1);
+    }
+
+    [Fact]
+    public void Explicit_RowHeight_Overrides_FontSize_Derived_Default()
+    {
+        var cut = Render<CommitGraph>(p => p
+            .Add(x => x.Commits, Linear())
+            .Add(x => x.FontSize, 20.0)
+            .Add(x => x.RowHeight, 40));
+
+        var cys = cut.FindAll("circle")
+            .Select(c => double.Parse(c.GetAttribute("cy")!, CultureInfo.InvariantCulture))
+            .ToList();
+        // RowHeight=40 → step of exactly 40 regardless of FontSize.
+        Assert.Equal(40, cys[1] - cys[0], precision: 1);
+    }
+
+    [Fact]
     public void ShowTooltip_False_Suppresses_Tooltip_On_Hover()
     {
         var data = new List<CommitNode>
