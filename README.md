@@ -190,6 +190,14 @@ author, short id and date; wire `OnCommitClick` to select a commit.
 A ref prefixed `tag:` (the `git log --decorate` convention) is styled as a tag; every
 other ref is styled as a branch.
 
+**Sizing.** `FontSize` (default 12) is the one knob for scale: row height, lane width, dot
+radius, and the badge and tooltip typography all derive from it, so the whole graph stays in
+proportion. Set it to match the surrounding UI. `RowHeight`, `LaneWidth`, and `DotRadius`
+still accept explicit overrides. `Width` controls how much horizontal room the message column
+gets — raise it to fit longer messages, not to enlarge the text (that's `FontSize`). Unlike
+the other charts, a responsive `CommitGraph` fills a narrower container but **caps at `Width`
+pixels** rather than magnifying in a wide one, so text never balloons when the panel stretches.
+
 ### Calendar Heatmap
 
 A GitHub-contributions-style grid — one cell per day in week columns, colored by each
@@ -265,6 +273,10 @@ All charts support fluid sizing via the `Responsive` parameter. When enabled, ch
     <BarChart Responsive="true" Width="700" Height="350" ... />
 </div>
 ```
+
+> **Note:** `CommitGraph` is the exception — being text-heavy, a responsive `CommitGraph`
+> scales *down* to fit a narrow container but caps at `Width` pixels rather than magnifying
+> in a wide one, keeping text at `FontSize`. See [Commit Graph](#commit-graph) for its sizing model.
 
 ## Label Auto-Thinning
 
