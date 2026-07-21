@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="bunit" Version="2.*" />
+    <!-- Transitive via bunit; pinned forward off 1.4.0 (GHSA-pgww-w46g-26qg). -->
+    <PackageReference Include="AngleSharp" Version="1.5.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
     <PackageReference Include="xunit" Version="2.*" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.*" PrivateAssets="all" />
