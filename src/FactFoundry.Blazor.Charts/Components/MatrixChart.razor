@@ -1,0 +1,121 @@
+@namespace FactFoundry.Blazor.Charts.Components
+@using System.Globalization
+
+@if (_layout.Rows.Count > 0 && _layout.Cols.Count > 0)
+{
+    var layout = _layout;
+    var text = ResolvedTheme.TextColor;
+    var labelOp = ResolvedTheme.LabelOpacity.ToString("F2", CultureInfo.InvariantCulture);
+    var grid = ResolvedTheme.GridColor;
+    var w = TotalWidth;
+    var h = TotalHeight;
+
+    <svg class="ff-matrix"
+         width="@(Responsive ? "100%" : F(w))"
+         height="@(Responsive ? null : F(h))"
+         viewBox="0 0 @F(w) @F(h)"
+         preserveAspectRatio="@(Responsive ? "xMinYMin meet" : null)"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
+         style="display:block;font-size:@(F(FontSize))px;@(Responsive ? $"max-width:{Math.Ceiling(w)}px;" : "")">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
+
+        @* Hover crosshair, under the cells *@
+        @if (ShowTooltip && _hoverRow is int hr && _hoverCol is int hc)
+        {
+            <rect x="@F(LeftPad - CellGap / 2.0)" y="@F(CellY(hr))" width="@F(GridWidth + CellGap)" height="@CellSize"
+                  fill="@grid" fill-opacity="0.16" rx="3" />
+            <rect x="@F(CellX(hc))" y="@F(TopPad - CellGap / 2.0)" width="@CellSize" height="@F(GridHeight + CellGap)"
+                  fill="@grid" fill-opacity="0.16" rx="3" />
+        }
+
+        @* Column labels (rotated), reading up toward the grid *@
+        @for (var c = 0; c < layout.Cols.Count; c++)
+        {
+            var col = layout.Cols[c];
+            var cx = CellX(c) + CellSize / 2.0 + LabelFont * 0.34;
+            var cy = TopPad - 6;
+            @((MarkupString)$"<text transform=\"rotate(-90 {F(cx)} {F(cy)})\" x=\"{F(cx)}\" y=\"{F(cy)}\" text-anchor=\"start\" fill=\"{text}\" opacity=\"{labelOp}\">{Escape(col.Label)}</text>")
+        }
+
+        @* Row labels *@
+        @for (var r = 0; r < layout.Rows.Count; r++)
+        {
+            var row = layout.Rows[r];
+            var ly = CellY(r) + CellSize / 2.0 + LabelFont * 0.34;
+            @((MarkupString)$"<text x=\"{F(LeftPad - 8)}\" y=\"{F(ly)}\" text-anchor=\"end\" fill=\"{text}\" opacity=\"{labelOp}\">{Escape(row.Label)}</text>")
+        }
+
+        @* Cells — empty placeholders then filled tiles (both hoverable for the crosshair) *@
+        @for (var r = 0; r < layout.Rows.Count; r++)
+        {
+            for (var c = 0; c < layout.Cols.Count; c++)
+            {
+                if (layout.Grid[r, c] > 0) continue;
+                var rr = r; var cc = c;
+                <rect x="@F(CellX(cc))" y="@F(CellY(rr))" width="@CellSize" height="@CellSize"
+                      rx="@CellRadius.ToString("0.##", CultureInfo.InvariantCulture)"
+                      fill="@grid" fill-opacity="@EmptyOpacity.ToString("F2", CultureInfo.InvariantCulture)"
+                      @onmouseover="() => OnCellOver(rr, cc)" @onmouseout="OnCellOut" />
+            }
+        }
+        @foreach (var cell in layout.Cells)
+        {
+            var m = cell;
+            var style = CellStyle(m);
+            <rect x="@F(CellX(m.C))" y="@F(CellY(m.R))" width="@CellSize" height="@CellSize"
+                  rx="@CellRadius.ToString("0.##", CultureInfo.InvariantCulture)"
+                  fill="@style.Fill" fill-opacity="@style.Opacity"
+                  style="@(OnCellClick.HasDelegate ? "cursor:pointer;" : null)"
+                  @onmouseover="() => OnCellOver(m.R, m.C)" @onmouseout="OnCellOut"
+                  @onclick="() => CellClick(m)" />
+            @if (ShowValues)
+            {
+                @((MarkupString)$"<text x=\"{F(CellX(m.C) + CellSize / 2.0)}\" y=\"{F(CellY(m.R) + CellSize / 2.0 + LabelFont * 0.34)}\" text-anchor=\"middle\" font-size=\"{F(LabelFont * 0.85)}\" fill=\"{text}\">{Escape(FormatValue(m.Value))}</text>")
+            }
+        }
+
+        @* Row totals (right) *@
+        @if (ShowRowTotals)
+        {
+            var tx = LeftPad + GridWidth + TotalsColWidth - 6;
+            @((MarkupString)$"<text transform=\"rotate(-90 {F(LeftPad + GridWidth + TotalsColWidth / 2.0)} {F(TopPad - 6)})\" x=\"{F(LeftPad + GridWidth + TotalsColWidth / 2.0)}\" y=\"{F(TopPad - 6)}\" text-anchor=\"start\" fill=\"{text}\" opacity=\"{labelOp}\">Total</text>")
+            for (var r = 0; r < layout.Rows.Count; r++)
+            {
+                var ly = CellY(r) + CellSize / 2.0 + LabelFont * 0.34;
+                @((MarkupString)$"<text x=\"{F(tx)}\" y=\"{F(ly)}\" text-anchor=\"end\" font-weight=\"600\" fill=\"{text}\">{Escape(FormatValue(layout.Rows[r].Total))}</text>")
+            }
+        }
+
+        @* Column totals (bottom) *@
+        @if (ShowColumnTotals)
+        {
+            var ty = TopPad + GridHeight + TotalsRowHeight - 2;
+            for (var c = 0; c < layout.Cols.Count; c++)
+            {
+                var cx = CellX(c) + CellSize / 2.0;
+                @((MarkupString)$"<text x=\"{F(cx)}\" y=\"{F(ty)}\" text-anchor=\"middle\" font-weight=\"600\" fill=\"{text}\">{Escape(FormatValue(layout.Cols[c].Total))}</text>")
+            }
+        }
+
+        @* Tooltip *@
+        @if (ShowTooltip && _hoverRow is int tr && _hoverCol is int tc && layout.Grid[tr, tc] > 0)
+        {
+            var title = $"{layout.Rows[tr].Label} × {layout.Cols[tc].Label}";
+            var sub = FormatValue(layout.Grid[tr, tc]);
+            var boxW = Math.Max(TextWidth(title), TextWidth(sub)) + 18;
+            var boxH = 34.0;
+            var cx = CellX(tc) + CellSize / 2.0;
+            var boxX = Math.Max(2, Math.Min(cx - boxW / 2, w - boxW - 2));
+            var above = CellY(tr) - boxH - 6;
+            var boxY = above >= 2 ? above : CellY(tr) + CellSize + 6;
+
+            <g style="pointer-events:none;">
+                <rect x="@F(boxX)" y="@F(boxY)" width="@F(boxW)" height="@F(boxH)" rx="5"
+                      fill="@ResolvedTheme.TooltipBackground" fill-opacity="@ResolvedTheme.TooltipOpacity.ToString("F2", CultureInfo.InvariantCulture)" />
+                @((MarkupString)$"<text x=\"{F(boxX + 9)}\" y=\"{F(boxY + 15)}\" font-size=\"11\" font-weight=\"600\" fill=\"{ResolvedTheme.TooltipTextColor}\">{Escape(title)}</text>")
+                @((MarkupString)$"<text x=\"{F(boxX + 9)}\" y=\"{F(boxY + 28)}\" font-size=\"11\" fill=\"{ResolvedTheme.TooltipTextColor}\" opacity=\"0.85\">{Escape(sub)}</text>")
+            </g>
+        }
+    </svg>
+}

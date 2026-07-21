@@ -254,6 +254,43 @@ larger of a node's inflow and outflow. Tune it with `NodeWidth`, `NodePadding`, 
 `LinkOpacity`, `Iterations` (crossing-reduction passes), and the `ShowNodeLabels`/`ShowValues`/`ShowTooltip`
 toggles; `OnNodeClick` reports the selected node.
 
+### Matrix Chart
+
+A rows × columns grid, filled where a row and column connect — read a row for everything it
+touches, or a column for everything that touches it. With uniform cell values it's a
+categorical membership grid; with varying values the fill intensity makes it a heatmap.
+
+```razor
+<MatrixChart Rows="@rows" Columns="@cols" Cells="@cells" ShowRowTotals="true" />
+
+@code {
+    private List<MatrixRow> rows =
+    [
+        new() { Id = "sales", Label = "Sales" },
+        new() { Id = "finance", Label = "Finance" }
+    ];
+
+    private List<MatrixColumn> cols =
+    [
+        new() { Id = "order", Label = "Order" },
+        new() { Id = "invoice", Label = "Invoice" }
+    ];
+
+    private List<MatrixCell> cells =
+    [
+        new() { Row = "sales",   Column = "order" },
+        new() { Row = "sales",   Column = "invoice" },
+        new() { Row = "finance", Column = "invoice" }
+    ];
+}
+```
+
+Cells are colored by their row (or column, with `ColorByColumn`), and fill intensity scales
+with `Value` against the busiest cell — so set real magnitudes for a heatmap or leave the
+default `1` for a plain membership grid. Tune it with `CellSize`/`CellGap`/`CellRadius`,
+`FontSize`, `MaxValue`, and the `ShowValues`/`ShowRowTotals`/`ShowColumnTotals`/`ShowTooltip`
+toggles; `OnCellClick` reports the selected cell.
+
 ## Theming
 
 Wrap any section of your app with `ChartThemeProvider` to theme all charts within it:
