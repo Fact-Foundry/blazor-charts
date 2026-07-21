@@ -220,6 +220,77 @@ summed, and the grid spans the data's date range (or an explicit `StartDate`/`En
 Tune it with `WeekStart`, `Levels` (intensity buckets), `Color`, `CellSize`/`CellGap`, and
 the `ShowMonthLabels`/`ShowWeekdayLabels`/`ShowLegend`/`ShowTooltip` toggles.
 
+### Sankey Chart
+
+A flow diagram — nodes in left-to-right columns joined by ribbons whose thickness is
+proportional to a value. Hand it any `SankeyNode`s and weighted `SankeyLink`s; the columns
+are worked out from the links (longest path from a source, terminal nodes pushed right),
+or pin a node's column with `Layer`. Hovering a node or ribbon isolates its flows.
+
+```razor
+<SankeyChart Nodes="@nodes" Links="@links" ShowValues="true" ValueFormat="N0" />
+
+@code {
+    private List<SankeyNode> nodes =
+    [
+        new() { Id = "organic", Label = "Organic search" },
+        new() { Id = "social",  Label = "Social" },
+        new() { Id = "landing", Label = "Landing" },
+        new() { Id = "signup",  Label = "Sign-up" }
+    ];
+
+    private List<SankeyLink> links =
+    [
+        new() { Source = "organic", Target = "landing", Value = 90 },
+        new() { Source = "social",  Target = "landing", Value = 62 },
+        new() { Source = "landing", Target = "signup",  Value = 120 }
+    ];
+}
+```
+
+Each link's `Value` sets its ribbon thickness — leave it at the default `1` for a
+uniform membership diagram, or pass a real magnitude for a true flow. Node height is the
+larger of a node's inflow and outflow. Tune it with `NodeWidth`, `NodePadding`, `FontSize`,
+`LinkOpacity`, `Iterations` (crossing-reduction passes), and the `ShowNodeLabels`/`ShowValues`/`ShowTooltip`
+toggles; `OnNodeClick` reports the selected node.
+
+### Matrix Chart
+
+A rows × columns grid, filled where a row and column connect — read a row for everything it
+touches, or a column for everything that touches it. With uniform cell values it's a
+categorical membership grid; with varying values the fill intensity makes it a heatmap.
+
+```razor
+<MatrixChart Rows="@rows" Columns="@cols" Cells="@cells" ShowRowTotals="true" />
+
+@code {
+    private List<MatrixRow> rows =
+    [
+        new() { Id = "sales", Label = "Sales" },
+        new() { Id = "finance", Label = "Finance" }
+    ];
+
+    private List<MatrixColumn> cols =
+    [
+        new() { Id = "order", Label = "Order" },
+        new() { Id = "invoice", Label = "Invoice" }
+    ];
+
+    private List<MatrixCell> cells =
+    [
+        new() { Row = "sales",   Column = "order" },
+        new() { Row = "sales",   Column = "invoice" },
+        new() { Row = "finance", Column = "invoice" }
+    ];
+}
+```
+
+Cells are colored by their row (or column, with `ColorByColumn`), and fill intensity scales
+with `Value` against the busiest cell — so set real magnitudes for a heatmap or leave the
+default `1` for a plain membership grid. Tune it with `CellSize`/`CellGap`/`CellRadius`,
+`FontSize`, `MaxValue`, and the `ShowValues`/`ShowRowTotals`/`ShowColumnTotals`/`ShowTooltip`
+toggles; `OnCellClick` reports the selected cell.
+
 ## Theming
 
 Wrap any section of your app with `ChartThemeProvider` to theme all charts within it:

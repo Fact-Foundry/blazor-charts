@@ -1,0 +1,77 @@
+@page "/matrix"
+@rendermode InteractiveServer
+@using FactFoundry.Blazor.Charts.Models
+
+<h2>Matrix Chart</h2>
+
+<p style="max-width: 660px; opacity: .8;">
+    Rows × columns of cells, filled where the two connect. Read a row for everything it
+    touches, or a column for everything that touches it. With uniform values it's a
+    membership grid; with varying values the fill intensity turns it into a heatmap. Hover a
+    cell for the crosshair and a tooltip.
+</p>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showValues" /> Show values</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showTotals" /> Totals</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="colorByColumn" /> Color by column</label>
+</div>
+
+<div style="border: 1px solid rgba(128,128,128,.25); border-radius: 8px; padding: 12px; display: inline-block;">
+    <MatrixChart Rows="@rows" Columns="@cols" Cells="@cells"
+                 ColorByColumn="colorByColumn"
+                 ShowValues="showValues"
+                 ShowRowTotals="showTotals"
+                 ShowColumnTotals="showTotals"
+                 ValueFormat="N0"
+                 OnCellClick="c => selected = c" />
+</div>
+
+@if (selected is not null)
+{
+    <p style="margin-top: 1rem;">Selected: <strong>@selected.Row × @selected.Column</strong> (@selected.Value)</p>
+}
+
+@code {
+    private bool showValues;
+    private bool showTotals = true;
+    private bool colorByColumn;
+    private MatrixCell? selected;
+
+    // Which source model each business entity is derived from — the ontology binding matrix.
+    private readonly List<MatrixRow> rows =
+    [
+        new() { Id = "sales",     Label = "Sales" },
+        new() { Id = "customer",  Label = "Customer" },
+        new() { Id = "product",   Label = "Product Catalog" },
+        new() { Id = "finance",   Label = "Finance" },
+        new() { Id = "inventory", Label = "Inventory" },
+        new() { Id = "marketing", Label = "Marketing" },
+        new() { Id = "ops",       Label = "Operations" }
+    ];
+
+    private readonly List<MatrixColumn> cols =
+    [
+        new() { Id = "order",    Label = "Order" },
+        new() { Id = "custm",    Label = "Customer Master" },
+        new() { Id = "sku",      Label = "Product SKU" },
+        new() { Id = "invoice",  Label = "Invoice" },
+        new() { Id = "shipment", Label = "Shipment" },
+        new() { Id = "campaign", Label = "Campaign" },
+        new() { Id = "region",   Label = "Region" }
+    ];
+
+    private readonly List<MatrixCell> cells =
+    [
+        new() { Row = "sales",     Column = "order" },    new() { Row = "sales",     Column = "custm" },
+        new() { Row = "sales",     Column = "sku" },      new() { Row = "sales",     Column = "invoice" },
+        new() { Row = "sales",     Column = "region" },
+        new() { Row = "customer",  Column = "custm" },    new() { Row = "customer",  Column = "region" },
+        new() { Row = "product",   Column = "sku" },
+        new() { Row = "finance",   Column = "order" },    new() { Row = "finance",   Column = "invoice" },
+        new() { Row = "inventory", Column = "sku" },      new() { Row = "inventory", Column = "shipment" },
+        new() { Row = "marketing", Column = "custm" },    new() { Row = "marketing", Column = "campaign" },
+        new() { Row = "marketing", Column = "region" },
+        new() { Row = "ops",       Column = "shipment" }
+    ];
+}
