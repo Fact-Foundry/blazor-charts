@@ -13,6 +13,8 @@ A zero-dependency, pure .NET charting library for Blazor applications. Charts ar
 - **Sparkline** — bare inline trend (no axes) for KPI tiles; legible down to ~80×30
 - **Commit Graph** — git-style branch/commit lane view; color-coded lanes, merge curves, ref badges, hover tooltips
 - **Calendar Heatmap** — GitHub-contributions-style day grid; intensity buckets, month/weekday labels, legend, hover tooltips
+- **Sankey Chart** — multi-column flow diagram; ribbons sized by value, columns derived from the links (or pinned), hover-to-isolate
+- **Matrix Chart** — rows × columns grid / heatmap; cells colored by row (or column), optional row/column totals, hover crosshair
 - **Theming** — built-in light/dark presets, cascading theme provider, fully customizable
 
 All charts include legends, hover tooltips, and accessible SVG output — `role="img"` with a `<title>` name and a data-aware `<desc>` description (override via the `Description` parameter). Works in both Blazor Server and Blazor WebAssembly.
