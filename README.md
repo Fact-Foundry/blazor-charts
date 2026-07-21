@@ -220,6 +220,40 @@ summed, and the grid spans the data's date range (or an explicit `StartDate`/`En
 Tune it with `WeekStart`, `Levels` (intensity buckets), `Color`, `CellSize`/`CellGap`, and
 the `ShowMonthLabels`/`ShowWeekdayLabels`/`ShowLegend`/`ShowTooltip` toggles.
 
+### Sankey Chart
+
+A flow diagram — nodes in left-to-right columns joined by ribbons whose thickness is
+proportional to a value. Hand it any `SankeyNode`s and weighted `SankeyLink`s; the columns
+are worked out from the links (longest path from a source, terminal nodes pushed right),
+or pin a node's column with `Layer`. Hovering a node or ribbon isolates its flows.
+
+```razor
+<SankeyChart Nodes="@nodes" Links="@links" ShowValues="true" ValueFormat="N0" />
+
+@code {
+    private List<SankeyNode> nodes =
+    [
+        new() { Id = "organic", Label = "Organic search" },
+        new() { Id = "social",  Label = "Social" },
+        new() { Id = "landing", Label = "Landing" },
+        new() { Id = "signup",  Label = "Sign-up" }
+    ];
+
+    private List<SankeyLink> links =
+    [
+        new() { Source = "organic", Target = "landing", Value = 90 },
+        new() { Source = "social",  Target = "landing", Value = 62 },
+        new() { Source = "landing", Target = "signup",  Value = 120 }
+    ];
+}
+```
+
+Each link's `Value` sets its ribbon thickness — leave it at the default `1` for a
+uniform membership diagram, or pass a real magnitude for a true flow. Node height is the
+larger of a node's inflow and outflow. Tune it with `NodeWidth`, `NodePadding`, `FontSize`,
+`LinkOpacity`, `Iterations` (crossing-reduction passes), and the `ShowNodeLabels`/`ShowValues`/`ShowTooltip`
+toggles; `OnNodeClick` reports the selected node.
+
 ## Theming
 
 Wrap any section of your app with `ChartThemeProvider` to theme all charts within it:

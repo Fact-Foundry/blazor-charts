@@ -1,0 +1,119 @@
+@namespace FactFoundry.Blazor.Charts.Components
+@using System.Globalization
+
+@if (_layout.Nodes.Count > 0)
+{
+    var layout = _layout;
+    var text = ResolvedTheme.TextColor;
+    var labelOp = ResolvedTheme.LabelOpacity.ToString("F2", CultureInfo.InvariantCulture);
+    var layerMax = layout.LayerCount - 1;
+    var active = IsActive;
+
+    <svg class="ff-sankey"
+         width="@(Responsive ? "100%" : Width.ToString())"
+         height="@(Responsive ? null : Height.ToString())"
+         viewBox="0 0 @Width @Height"
+         preserveAspectRatio="@(Responsive ? "xMinYMid meet" : null)"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="@TitleId @DescId"
+         style="display:block;font-size:@(F(FontSize))px;@(Responsive ? $"max-width:{Width}px;" : "")">
+        <title id="@TitleId">@AccessibleName</title>
+        <desc id="@DescId">@AccessibleDescription</desc>
+
+        @* Ribbons *@
+        @for (var i = 0; i < layout.Links.Count; i++)
+        {
+            var idx = i;
+            var l = layout.Links[idx];
+            var op = !active ? LinkOpacity
+                : LinkLit(idx) ? Math.Min(0.85, LinkOpacity + 0.30)
+                : LinkOpacity * 0.25;
+            <path d="@l.Path" fill="@l.Color" fill-opacity="@op.ToString("F2", CultureInfo.InvariantCulture)"
+                  stroke="none" style="cursor:pointer;"
+                  @onmouseover="() => OnLinkOver(idx)" @onmouseout="OnOut" />
+        }
+
+        @* Nodes *@
+        @foreach (var node in layout.Nodes)
+        {
+            var n = node;
+            var nodeOp = active && !NodeLit(n.Id) ? "0.25" : "1";
+            <rect x="@F(n.X)" y="@F(n.Y)" width="@F(NodeWidth)" height="@F(n.H)" rx="2.5"
+                  fill="@n.Color" opacity="@nodeOp"
+                  style="@(OnNodeClick.HasDelegate ? "cursor:pointer;" : null)"
+                  @onmouseover="() => OnNodeOver(n.Id)" @onmouseout="OnOut"
+                  @onclick="() => NodeClick(n.Id)" />
+        }
+
+        @* Node labels *@
+        @if (ShowNodeLabels)
+        {
+            foreach (var node in layout.Nodes)
+            {
+                var n = node;
+                var op = active && !NodeLit(n.Id) ? "0.25" : labelOp;
+                var cy = n.Y + n.H / 2;
+                if (n.Layer == 0 && layerMax > 0)
+                {
+                    @((MarkupString)$"<text x=\"{F(n.X - 6)}\" y=\"{F(cy + LabelFont * 0.34)}\" text-anchor=\"end\" fill=\"{text}\" opacity=\"{op}\">{Escape(n.Label)}</text>")
+                }
+                else if (n.Layer == layerMax)
+                {
+                    @((MarkupString)$"<text x=\"{F(n.X + NodeWidth + 6)}\" y=\"{F(cy + LabelFont * 0.34)}\" text-anchor=\"start\" fill=\"{text}\" opacity=\"{op}\">{Escape(n.Label)}</text>")
+                }
+                else
+                {
+                    @((MarkupString)$"<text x=\"{F(n.X + NodeWidth / 2)}\" y=\"{F(n.Y - 4)}\" text-anchor=\"middle\" fill=\"{text}\" opacity=\"{op}\">{Escape(n.Label)}</text>")
+                }
+            }
+        }
+
+        @* Tooltip *@
+        @if (ShowTooltip && active)
+        {
+            @RenderTooltip()
+        }
+    </svg>
+}
+
+@code {
+    private RenderFragment RenderTooltip() => builder =>
+    {
+        string title, sub;
+        double anchorX, anchorY;
+
+        if (_hoverLink is int hl)
+        {
+            var l = _layout.Links[hl];
+            title = $"{NodeLabel(l.Source)} → {NodeLabel(l.Target)}";
+            sub = FormatValue(l.Value);
+            anchorX = l.LabelX;
+            anchorY = l.LabelY;
+        }
+        else
+        {
+            var n = _layout.Nodes.First(x => x.Id == _hoverNode);
+            title = n.Label;
+            sub = FormatValue(n.Value);
+            anchorX = n.X + NodeWidth / 2;
+            anchorY = n.Y + n.H / 2;
+        }
+
+        var boxW = Math.Max(TextWidth(title), TextWidth(sub)) + 18;
+        var boxH = 34.0;
+        var boxX = Math.Max(2, Math.Min(anchorX - boxW / 2, Width - boxW - 2));
+        var boxY = Math.Max(2, Math.Min(anchorY - boxH - 8, Height - boxH - 2));
+        var bg = ResolvedTheme.TooltipBackground;
+        var tc = ResolvedTheme.TooltipTextColor;
+        var bgOp = ResolvedTheme.TooltipOpacity.ToString("F2", CultureInfo.InvariantCulture);
+
+        var svg =
+            $"<g style=\"pointer-events:none;\">" +
+            $"<rect x=\"{F(boxX)}\" y=\"{F(boxY)}\" width=\"{F(boxW)}\" height=\"{F(boxH)}\" rx=\"5\" fill=\"{bg}\" fill-opacity=\"{bgOp}\" />" +
+            $"<text x=\"{F(boxX + 9)}\" y=\"{F(boxY + 15)}\" font-size=\"11\" font-weight=\"600\" fill=\"{tc}\">{Escape(title)}</text>" +
+            $"<text x=\"{F(boxX + 9)}\" y=\"{F(boxY + 28)}\" font-size=\"11\" fill=\"{tc}\" opacity=\"0.85\">{Escape(sub)}</text>" +
+            $"</g>";
+        builder.AddMarkupContent(0, svg);
+    };
+
+    private string NodeLabel(string id) => _layout.Nodes.FirstOrDefault(n => n.Id == id)?.Label ?? id;
+}

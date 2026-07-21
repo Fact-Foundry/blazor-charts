@@ -1,0 +1,76 @@
+@page "/sankey"
+@using FactFoundry.Blazor.Charts.Models
+
+<h2>Sankey Chart</h2>
+
+<p style="max-width: 660px; opacity: .8;">
+    Nodes in left-to-right columns joined by ribbons whose thickness follows a flow value.
+    Columns are derived from the links (or pinned per node). Hover a node or ribbon to
+    isolate it. The example below is a three-stage web-traffic flow: sources → channels → pages.
+</p>
+
+<div style="margin-bottom: 1rem;">
+    <label><input type="checkbox" @bind="showValues" /> Show values</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showLabels" /> Labels</label>
+    <label style="margin-left: 1rem;"><input type="checkbox" @bind="showTooltip" /> Tooltip</label>
+</div>
+
+<div style="max-width: 820px; border: 1px solid rgba(128,128,128,.25); border-radius: 8px; padding: 10px;">
+    <SankeyChart Nodes="@nodes" Links="@links"
+                 Width="800" Height="460"
+                 ShowValues="showValues"
+                 ShowNodeLabels="showLabels"
+                 ShowTooltip="showTooltip"
+                 ValueFormat="N0"
+                 OnNodeClick="n => selected = n" />
+</div>
+
+@if (selected is not null)
+{
+    <p style="margin-top: 1rem;">Selected: <strong>@(selected.Label ?? selected.Id)</strong></p>
+}
+
+@code {
+    private bool showValues;
+    private bool showLabels = true;
+    private bool showTooltip = true;
+    private SankeyNode? selected;
+
+    private readonly List<SankeyNode> nodes =
+    [
+        new() { Id = "organic",  Label = "Organic search" },
+        new() { Id = "direct",   Label = "Direct" },
+        new() { Id = "referral", Label = "Referral" },
+        new() { Id = "social",   Label = "Social" },
+        new() { Id = "paid",     Label = "Paid search" },
+        new() { Id = "email",    Label = "Email" },
+        new() { Id = "landing",  Label = "Landing" },
+        new() { Id = "product",  Label = "Product" },
+        new() { Id = "pricing",  Label = "Pricing" },
+        new() { Id = "signup",   Label = "Sign-up" },
+        new() { Id = "docs",     Label = "Docs" }
+    ];
+
+    private readonly List<SankeyLink> links =
+    [
+        new() { Source = "organic",  Target = "landing", Value = 90 },
+        new() { Source = "organic",  Target = "product", Value = 52 },
+        new() { Source = "direct",   Target = "landing", Value = 40 },
+        new() { Source = "direct",   Target = "docs",    Value = 28 },
+        new() { Source = "referral", Target = "product", Value = 46 },
+        new() { Source = "referral", Target = "pricing", Value = 24 },
+        new() { Source = "social",   Target = "landing", Value = 62 },
+        new() { Source = "social",   Target = "product", Value = 30 },
+        new() { Source = "paid",     Target = "pricing", Value = 45 },
+        new() { Source = "email",    Target = "product", Value = 26 },
+        new() { Source = "email",    Target = "docs",    Value = 18 },
+
+        new() { Source = "landing",  Target = "signup",  Value = 120 },
+        new() { Source = "landing",  Target = "pricing", Value = 72 },
+        new() { Source = "product",  Target = "signup",  Value = 96 },
+        new() { Source = "product",  Target = "pricing", Value = 58 },
+        new() { Source = "pricing",  Target = "signup",  Value = 140 },
+        new() { Source = "pricing",  Target = "docs",    Value = 59 },
+        new() { Source = "docs",     Target = "signup",  Value = 60 }
+    ];
+}
